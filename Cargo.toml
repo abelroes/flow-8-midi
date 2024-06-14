@@ -1,0 +1,8 @@
+[package]
+name = "flow-8-midi"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+iced = "0.12.1"
+midir = "0.10.0"
