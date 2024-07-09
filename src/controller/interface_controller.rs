@@ -1,9 +1,9 @@
 use crate::{
-    model::channels::{Channel, PhantomPower},
     controller::message::InterfaceMessage,
+    model::channels::{Channel, PhantomPower},
 };
 use iced::{
-    widget::{button, row, text, toggler, vertical_slider, Column, Space},
+    widget::{button, column, row, text, toggler, vertical_slider, Column, Space},
     Alignment,
 };
 

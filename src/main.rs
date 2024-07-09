@@ -1,13 +1,20 @@
-mod model;
 mod controller;
+mod model;
 
-use model::channels::{AudioConnection, Channel, ChannelType, PhantomPower};
 use controller::{interface_controller::*, message::InterfaceMessage};
+use image::load_from_memory;
+use model::channels::{AudioConnection, Channel, ChannelType, PhantomPower};
 
 use iced::{
-    widget::{Column, Row,},
-    Element, Sandbox, Settings,
+    settings,
+    widget::{Column, Row},
+    window::{self, icon::from_rgba},
+    Element, Sandbox,
 };
+
+static ICON: &[u8] = include_bytes!("../resources/flow_32x32.ico");
+const ICON_HEIGHT: u32 = 32;
+const ICON_WIDTH: u32 = 32;
 
 #[derive(Debug)]
 struct FLOW8Controller {
@@ -96,7 +103,17 @@ impl Sandbox for FLOW8Controller {
 }
 
 fn main() {
-    match FLOW8Controller::run(Settings::default()) {
+    let image = load_from_memory(ICON).unwrap();
+    let icon = from_rgba(image.as_bytes().to_vec(), ICON_HEIGHT, ICON_WIDTH).unwrap();
+
+    let settings = settings::Settings {
+        window: window::Settings {
+            icon: Some(icon),
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    match FLOW8Controller::run(settings) {
         Ok(_) => (),
         Err(err) => println!("Error: {}", err),
     }
