@@ -2,10 +2,10 @@ pub type ChannelId = u8;
 
 #[derive(Copy, Clone, Debug)]
 pub enum AudioConnection {
-    XLR,
+    Xlr,
     Line,
     UsbBt,
-    ComboXLR,
+    ComboXlr,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -17,7 +17,7 @@ pub enum ChannelType {
 #[derive(Copy, Clone, Debug)]
 pub enum PhantomPower {
     None,
-    Set48V(u8),
+    Set48v(u8),
 }
 
 #[derive(Copy, Clone, Debug)]

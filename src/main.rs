@@ -1,11 +1,13 @@
-// mod midi;
-mod channels;
+mod model;
+mod controller;
 
-// use midi::run;
-use channels::{ChannelId, AudioConnection, Channel, ChannelType};
+use model::channels::{AudioConnection, Channel, ChannelType, PhantomPower};
+use controller::{interface_controller::*, message::InterfaceMessage};
 
-use iced::widget::{button, column, vertical_slider, Row};
-use iced::{Element, Sandbox, Settings};
+use iced::{
+    widget::{Column, Row,},
+    Element, Sandbox, Settings,
+};
 
 #[derive(Debug)]
 struct FLOW8Controller {
@@ -13,22 +15,28 @@ struct FLOW8Controller {
 }
 
 impl FLOW8Controller {
-    fn new () -> FLOW8Controller{
+    fn new() -> FLOW8Controller {
         FLOW8Controller {
-            channels: (0..10)
-                .map(|id| Channel {
-                    id: id,
+            channels: (0..9)
+                .map(|c_id| Channel {
+                    id: c_id,
+                    phantom_pwr: {
+                        match c_id {
+                            0..=1 => PhantomPower::Set48v(0),
+                            _ => PhantomPower::None,
+                        }
+                    },
                     channel_type: {
-                        match id {
+                        match c_id {
                             0..=3 => ChannelType::Mono,
                             4..=8 => ChannelType::Stereo,
                             _ => ChannelType::Stereo,
                         }
                     },
                     audio_connection: {
-                        match id {
-                            0..=1 => AudioConnection::XLR,
-                            2..=3 => AudioConnection::ComboXLR,
+                        match c_id {
+                            0..=1 => AudioConnection::Xlr,
+                            2..=3 => AudioConnection::ComboXlr,
                             4..=5 => AudioConnection::Line,
                             _ => AudioConnection::UsbBt,
                         }
@@ -40,29 +48,22 @@ impl FLOW8Controller {
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-enum InterfaceMessage {
-    Mute(ChannelId),
-    Solo(ChannelId),
-    Gain(ChannelId, u8),
-    Level(ChannelId, u8),
-    Balance(ChannelId, u8),
-    Compressor(ChannelId, u8),
-    EQ_Low(ChannelId, u8),
-    EQ_Low_Mid(ChannelId, u8),
-    EQ_Hi_Mid(ChannelId, u8),
-    EQ_Hi(ChannelId, u8),
-}
-
 impl Sandbox for FLOW8Controller {
     type Message = InterfaceMessage;
 
     fn new() -> Self {
         FLOW8Controller::new()
     }
+
     fn title(&self) -> String {
         String::from("FLOW 8 Controller")
     }
+
+    fn theme(&self) -> iced::Theme {
+        iced::Theme::Dark
+        // iced::Theme::KanagawaDragon
+    }
+
     fn update(&mut self, _message: InterfaceMessage) {
         match _message {
             InterfaceMessage::Mute(c) => (),
@@ -70,27 +71,29 @@ impl Sandbox for FLOW8Controller {
             InterfaceMessage::Gain(c, v) => (),
             InterfaceMessage::Level(c, v) => (),
             InterfaceMessage::Balance(c, v) => (),
+            InterfaceMessage::PhantomPower(c, v) => (),
             InterfaceMessage::Compressor(c, v) => (),
-            InterfaceMessage::EQ_Low(c, v) => (),
-            InterfaceMessage::EQ_Low_Mid(c, v) => (),
-            InterfaceMessage::EQ_Hi_Mid(c, v) => (),
-            InterfaceMessage::EQ_Hi(c, v) => (),
+            InterfaceMessage::EqLow(c, v) => (),
+            InterfaceMessage::EqLowMid(c, v) => (),
+            InterfaceMessage::EqHiMid(c, v) => (),
+            InterfaceMessage::EqHi(c, v) => (),
         }
     }
+
     fn view(&self) -> Element<InterfaceMessage> {
-        let row = Row::new();
-        column![
-            button("Mute").on_press(InterfaceMessage::Mute),
-            vertical_slider(1u8..=127u8, self.volume, |v| InterfaceMessage::Level(v))
-        ]
+        Row::with_children(self.channels.iter().map(|c: &Channel| {
+            let mut column = Column::new();
+
+            column = add_channel_name(column, c);
+            column = add_mute_solo(column, c);
+            column = add_phantom(column, c);
+            column = add_vertical_slider(column, c);
+
+            finalize_column(column).into()
+        }))
         .into()
     }
-    fn theme(&self) -> iced::Theme {
-        iced::Theme::Dark
-        // or
-        // iced::Theme::Light
-    }
-} 
+}
 
 fn main() {
     match FLOW8Controller::run(Settings::default()) {
