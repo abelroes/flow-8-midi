@@ -63,7 +63,7 @@ pub fn add_vertical_slider<'a>(
             vertical_slider(1..=127, channel.channel_strip.level, |v| {
                 InterfaceMessage::Level(channel.id, v)
             })
-            .height(500),
+            .height(350),
         ]
         .align_items(Alignment::Center),
     )

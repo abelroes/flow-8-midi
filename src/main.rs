@@ -8,8 +8,8 @@ use model::channels::{AudioConnection, Channel, ChannelType, PhantomPower};
 use iced::{
     settings,
     widget::{Column, Row},
-    window::{self, icon::from_rgba},
-    Element, Sandbox,
+    window::{self, icon::from_rgba, Position},
+    Element, Sandbox, Size,
 };
 
 static ICON: &[u8] = include_bytes!("../resources/flow_32x32.ico");
@@ -67,7 +67,6 @@ impl Sandbox for FLOW8Controller {
 
     fn theme(&self) -> iced::Theme {
         iced::Theme::Dark
-        // iced::Theme::KanagawaDragon
     }
 
     fn update(&mut self, _message: InterfaceMessage) {
@@ -107,6 +106,8 @@ fn main() {
 
     let settings = settings::Settings {
         window: window::Settings {
+            size: Size { width: 1000.0, height: 600.0 },
+            position: Position::Centered,
             icon: Some(icon),
             ..Default::default()
         },
