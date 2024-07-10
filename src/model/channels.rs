@@ -1,3 +1,5 @@
+use core::fmt;
+
 pub type ChannelId = u8;
 
 #[derive(Copy, Clone, Debug)]
@@ -6,6 +8,19 @@ pub enum AudioConnection {
     Line,
     UsbBt,
     ComboXlr,
+}
+
+impl fmt::Display for AudioConnection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut text = "";
+        match *self {
+            AudioConnection::Xlr => text = "XLR",
+            AudioConnection::Line => text = "Line",
+            AudioConnection::UsbBt => text = "USB/BT",
+            AudioConnection::ComboXlr => text = "Combo",
+        }
+        write!(f, "{}", text)
+    }
 }
 
 #[derive(Copy, Clone, Debug)]

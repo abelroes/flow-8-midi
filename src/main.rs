@@ -24,7 +24,7 @@ struct FLOW8Controller {
 impl FLOW8Controller {
     fn new() -> FLOW8Controller {
         FLOW8Controller {
-            channels: (0..9)
+            channels: (0..=6)
                 .map(|c_id| Channel {
                     id: c_id,
                     phantom_pwr: {
@@ -36,7 +36,6 @@ impl FLOW8Controller {
                     channel_type: {
                         match c_id {
                             0..=3 => ChannelType::Mono,
-                            4..=8 => ChannelType::Stereo,
                             _ => ChannelType::Stereo,
                         }
                     },
@@ -89,7 +88,7 @@ impl Sandbox for FLOW8Controller {
 
     fn view(&self) -> Element<InterfaceMessage> {
         Row::with_children(self.channels.iter().map(|c: &Channel| {
-            let mut column = Column::new();
+            let mut column = Column::new().width(CHANNEL_STRIP_WIDTH);
 
             column = add_channel_name(column, c);
             column = add_mute_solo(column, c);
