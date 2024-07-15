@@ -1,8 +1,10 @@
 mod controller;
+pub mod midi;
 mod model;
 
 use controller::{interface_controller::*, message::InterfaceMessage};
 use image::load_from_memory;
+use midi::get_midi_conn;
 use model::{
     channels::{Bus, Channel},
     flow_8_controller::FLOW8Controller,
@@ -69,6 +71,11 @@ fn main() {
     let image = load_from_memory(ICON).unwrap();
     let icon = from_rgba(image.as_bytes().to_vec(), ICON_HEIGHT, ICON_WIDTH).unwrap();
 
+    //Temporary flag for midi connection bypass
+    let connection_optional = true;
+
+    let mut midi_conn = get_midi_conn(connection_optional).unwrap();
+
     let settings = settings::Settings {
         window: window::Settings {
             size: Size {
@@ -83,6 +90,6 @@ fn main() {
     };
     match FLOW8Controller::run(settings) {
         Ok(_) => (),
-        Err(err) => println!("Error: {}", err),
+        Err(err) => println!("Something went wrong: {}.", err),
     }
 }
