@@ -1,11 +1,13 @@
 use crate::{
-    controller::message::InterfaceMessage, midi::{get_midi_conn, send_cc}, model::{channels::{Bus, Channel, PhantomPowerType}, flow_8_controller::{self, FLOW8Controller}}
+    controller::message::InterfaceMessage,
+    midi::send_cc,
+    model::channels::{Bus, Channel, PhantomPowerType},
 };
 use iced::{
     widget::{button, column, row, text, toggler, vertical_slider, Column, Space},
     Alignment,
 };
-use midir::MidiOutput;
+use midir::MidiOutputConnection;
 
 pub const CHANNEL_STRIP_WIDTH: u16 = 120;
 
@@ -41,11 +43,23 @@ pub fn add_mute_solo<'a>(
 ) -> Column<'a, InterfaceMessage> {
     column.push(row![
         button("Mute")
-            .on_press(InterfaceMessage::Mute(channel.id, match channel.is_muted {true => 1, false => 0}))
+            .on_press(InterfaceMessage::Mute(
+                channel.id,
+                match channel.is_muted {
+                    true => 1,
+                    false => 0,
+                }
+            ))
             .padding(5),
         Space::with_width(5),
         button("Solo")
-            .on_press(InterfaceMessage::Solo(channel.id, match channel.is_soloed {true => 1, false => 0}))
+            .on_press(InterfaceMessage::Solo(
+                channel.id,
+                match channel.is_soloed {
+                    true => 1,
+                    false => 0,
+                }
+            ))
             .padding(5),
     ])
 }
@@ -127,18 +141,18 @@ pub fn add_bus_vertical_slider<'a>(
     )
 }
 
-pub fn match_midi_command(message: InterfaceMessage, midi_out: Option<MidiOutput>) {
+pub fn match_midi_command(message: InterfaceMessage, midi_conn: &mut MidiOutputConnection) {
     match message {
-        InterfaceMessage::Mute(chn_id, value) => send_cc(midi_out, chn_id, 5, value),
-        InterfaceMessage::Solo(chn_id, value) => send_cc(midi_out, chn_id, 6, value),
-        InterfaceMessage::Gain(chn_id, value) => send_cc(midi_out, chn_id, 8, value),
-        InterfaceMessage::Level(chn_id, value) => send_cc(midi_out, chn_id, 7, value),
-        InterfaceMessage::Balance(chn_id, value) => send_cc(midi_out, chn_id, 10, value),
-        InterfaceMessage::PhantomPower(chn_id, value) => send_cc(midi_out, chn_id, 12, value),
-        InterfaceMessage::Compressor(chn_id, value) => send_cc(midi_out, chn_id, 11, value),
-        InterfaceMessage::EqLow(chn_id, value) => send_cc(midi_out, chn_id, 1, value),
-        InterfaceMessage::EqLowMid(chn_id, value) => send_cc(midi_out, chn_id, 2, value),
-        InterfaceMessage::EqHiMid(chn_id, value) => send_cc(midi_out, chn_id, 3, value),
-        InterfaceMessage::EqHi(chn_id, value) => send_cc(midi_out, chn_id, 4, value),
+        InterfaceMessage::Mute(chn_id, value) => send_cc(midi_conn, chn_id, 5, value),
+        InterfaceMessage::Solo(chn_id, value) => send_cc(midi_conn, chn_id, 6, value),
+        InterfaceMessage::Gain(chn_id, value) => send_cc(midi_conn, chn_id, 8, value),
+        InterfaceMessage::Level(chn_id, value) => send_cc(midi_conn, chn_id, 7, value),
+        InterfaceMessage::Balance(chn_id, value) => send_cc(midi_conn, chn_id, 10, value),
+        InterfaceMessage::PhantomPower(chn_id, value) => send_cc(midi_conn, chn_id, 12, value),
+        InterfaceMessage::Compressor(chn_id, value) => send_cc(midi_conn, chn_id, 11, value),
+        InterfaceMessage::EqLow(chn_id, value) => send_cc(midi_conn, chn_id, 1, value),
+        InterfaceMessage::EqLowMid(chn_id, value) => send_cc(midi_conn, chn_id, 2, value),
+        InterfaceMessage::EqHiMid(chn_id, value) => send_cc(midi_conn, chn_id, 3, value),
+        InterfaceMessage::EqHi(chn_id, value) => send_cc(midi_conn, chn_id, 4, value),
     }
 }
