@@ -1,11 +1,11 @@
 use crate::{
-    controller::message::InterfaceMessage,
-    model::channels::{Bus, Channel, PhantomPower},
+    controller::message::InterfaceMessage, midi::{get_midi_conn, send_cc}, model::{channels::{Bus, Channel, PhantomPowerType}, flow_8_controller::{self, FLOW8Controller}}
 };
 use iced::{
     widget::{button, column, row, text, toggler, vertical_slider, Column, Space},
-    Alignment, Element,
+    Alignment,
 };
+use midir::MidiOutput;
 
 pub const CHANNEL_STRIP_WIDTH: u16 = 120;
 
@@ -41,11 +41,11 @@ pub fn add_mute_solo<'a>(
 ) -> Column<'a, InterfaceMessage> {
     column.push(row![
         button("Mute")
-            .on_press(InterfaceMessage::Mute(channel.id))
+            .on_press(InterfaceMessage::Mute(channel.id, match channel.is_muted {true => 1, false => 0}))
             .padding(5),
         Space::with_width(5),
         button("Solo")
-            .on_press(InterfaceMessage::Solo(channel.id))
+            .on_press(InterfaceMessage::Solo(channel.id, match channel.is_soloed {true => 1, false => 0}))
             .padding(5),
     ])
 }
@@ -54,7 +54,7 @@ pub fn add_phantom<'a>(
     column: Column<'a, InterfaceMessage>,
     channel: &'a Channel,
 ) -> Column<'a, InterfaceMessage> {
-    if let PhantomPower::Set48v(_) = channel.phantom_pwr {
+    if let PhantomPowerType::Set48v(_) = channel.phantom_pwr.phanton_power_type {
         column.push(
             row![toggler("48V".to_string(), false, |v| {
                 InterfaceMessage::PhantomPower(channel.id, v.into())
@@ -125,4 +125,20 @@ pub fn add_bus_vertical_slider<'a>(
         ]
         .align_items(Alignment::Center),
     )
+}
+
+pub fn match_midi_command(message: InterfaceMessage, midi_out: Option<MidiOutput>) {
+    match message {
+        InterfaceMessage::Mute(chn_id, value) => send_cc(midi_out, chn_id, 5, value),
+        InterfaceMessage::Solo(chn_id, value) => send_cc(midi_out, chn_id, 6, value),
+        InterfaceMessage::Gain(chn_id, value) => send_cc(midi_out, chn_id, 8, value),
+        InterfaceMessage::Level(chn_id, value) => send_cc(midi_out, chn_id, 7, value),
+        InterfaceMessage::Balance(chn_id, value) => send_cc(midi_out, chn_id, 10, value),
+        InterfaceMessage::PhantomPower(chn_id, value) => send_cc(midi_out, chn_id, 12, value),
+        InterfaceMessage::Compressor(chn_id, value) => send_cc(midi_out, chn_id, 11, value),
+        InterfaceMessage::EqLow(chn_id, value) => send_cc(midi_out, chn_id, 1, value),
+        InterfaceMessage::EqLowMid(chn_id, value) => send_cc(midi_out, chn_id, 2, value),
+        InterfaceMessage::EqHiMid(chn_id, value) => send_cc(midi_out, chn_id, 3, value),
+        InterfaceMessage::EqHi(chn_id, value) => send_cc(midi_out, chn_id, 4, value),
+    }
 }

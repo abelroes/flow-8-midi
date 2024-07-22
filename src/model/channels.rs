@@ -50,7 +50,13 @@ impl fmt::Display for BusType {
 }
 
 #[derive(Copy, Clone, Debug)]
-pub enum PhantomPower {
+pub struct PhantomPower {
+    pub is_on: bool,
+    pub phanton_power_type: PhantomPowerType,
+}
+
+#[derive(Copy, Clone, Debug)]
+pub enum PhantomPowerType {
     None,
     Set48v(u8),
 }
@@ -58,6 +64,8 @@ pub enum PhantomPower {
 #[derive(Copy, Clone, Debug)]
 pub struct Channel {
     pub id: ChannelId,
+    pub is_muted: bool,
+    pub is_soloed: bool,
     pub phantom_pwr: PhantomPower,
     pub channel_type: ChannelType,
     pub audio_connection: AudioConnection,
@@ -69,7 +77,12 @@ impl Default for Channel {
     fn default() -> Self {
         Self {
             id: 0,
-            phantom_pwr: PhantomPower::None,
+            is_muted: false,
+            is_soloed: false,
+            phantom_pwr: PhantomPower {
+                is_on: false,
+                phanton_power_type: PhantomPowerType::None,
+            },
             channel_type: ChannelType::Mono,
             audio_connection: AudioConnection::UsbBt,
             channel_strip: BasicChannelStrip::default(),

@@ -1,22 +1,32 @@
-use super::channels::{AudioConnection, Bus, BusType, Channel, ChannelType, PhantomPower};
+use midir::MidiOutput;
 
-#[derive(Debug)]
+use super::channels::{
+    AudioConnection, Bus, BusType, Channel, ChannelType, PhantomPower, PhantomPowerType,
+};
+
+pub struct InputParams {
+    pub midi_out: Option<MidiOutput>,
+}
+
 pub struct FLOW8Controller {
-    pub channels: Vec<Channel>,
     pub buses: Vec<Bus>,
+    pub midi_out: Option<MidiOutput>,
+    pub channels: Vec<Channel>,
 }
 
 impl FLOW8Controller {
-    pub fn new() -> FLOW8Controller {
+    pub fn new(midi_out: Option<MidiOutput>) -> FLOW8Controller {
         FLOW8Controller {
+            midi_out,
             channels: (0..=6)
                 .map(|c_id| Channel {
                     id: c_id,
-                    phantom_pwr: {
-                        match c_id {
-                            0..=1 => PhantomPower::Set48v(0),
-                            _ => PhantomPower::None,
-                        }
+                    phantom_pwr: PhantomPower {
+                        is_on: false,
+                        phanton_power_type: match c_id {
+                            0..=1 => PhantomPowerType::Set48v(0),
+                            _ => PhantomPowerType::None,
+                        },
                     },
                     channel_type: {
                         match c_id {

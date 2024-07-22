@@ -1,16 +1,11 @@
+use midir::{MidiOutput, MidiOutputConnection, MidiOutputPort, MidiOutputPorts};
+
 // MIDI protocol constants
 const CONTROL_CHANGE_PREFIX: u8 = 0xB0;
 const FLOW_DEVICE_STR: &str = "FLOW 8 MIDI OUT";
 const FLOW_CLIENT_NAME: &str = "FLOW 8 Midi Controller";
 
-use midir::{MidiOutput, MidiOutputConnection, MidiOutputPort, MidiOutputPorts};
-
-pub fn get_midi_conn(is_optional: bool) -> Option<MidiOutputConnection> {
-    if is_optional {
-        return None;
-    };
-
-    let midi_out = get_midi_output();
+pub fn get_midi_conn(midi_out: MidiOutput) -> MidiOutputConnection {
     let midi_ports = get_midi_output_ports(&midi_out);
     let port_num = get_flow_midi_port(&midi_out, &midi_ports);
 
@@ -25,13 +20,16 @@ pub fn get_midi_conn(is_optional: bool) -> Option<MidiOutputConnection> {
         Err(_) => panic!("Couldn't connect to Midi port/device"),
     };
 
-    Some(conn_out)
+    conn_out
 }
 
-pub fn get_midi_output() -> MidiOutput {
+pub fn get_midi_output() -> Option<MidiOutput> {
     match MidiOutput::new(FLOW_CLIENT_NAME) {
-        Ok(conn) => conn,
-        Err(_) => panic!("Couldn't connect to FLOW 8 device"),
+        Ok(conn) => Some(conn),
+        Err(_) => {
+            dbg!("Couldn't connect to device FLOW 8");
+            None
+        }
     }
 }
 
@@ -59,16 +57,18 @@ pub fn get_flow_midi_port(midi_output: &MidiOutput, midi_ports: &MidiOutputPorts
     port_num
 }
 
-pub fn send_cc(mut midi_conn: MidiOutputConnection, midi_channel: u8, cc: u8, value: u8) {
-    midi_conn
-        .send(&[CONTROL_CHANGE_PREFIX | midi_channel, cc, value])
-        .unwrap_or_else(|e| {
-            eprintln!(
-                "Failed to send CC#{} value {} on ch#{}: {:?}",
-                cc,
-                value,
-                midi_channel + 1,
-                e
-            )
-        });
+pub fn send_cc(midi_out: Option<MidiOutput>, midi_channel: u8, cc: u8, value: u8) {
+    if let Some(midi_out) = midi_out {
+        get_midi_conn(midi_out)
+            .send(&[CONTROL_CHANGE_PREFIX | midi_channel, cc, value])
+            .unwrap_or_else(|e| {
+                eprintln!(
+                    "Failed to send CC#{} value {} on ch#{}: {:?}",
+                    cc,
+                    value,
+                    midi_channel + 1,
+                    e
+                )
+            });
+    }
 }
