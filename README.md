@@ -14,31 +14,35 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 
 ## Features
 
-- All channels Level, Mute and Solo commands
-- Level commands for Main and Monitor busses
+- All channels Level, Mute and Solo commands.
+- Level commands for Main and Monitor busses.
 
 ## How to Use
 
-1. Download the FLOW 8 MIDI Controller
-2. Connect your FLOW 8 device to your PC
-3. Open the application
-4. Use the GUI to control the parameters
+1. Download the FLOW 8 MIDI Controller.
+2. Connect your FLOW 8 device to your PC.
+3. Open the application.
+4. Use the GUI to control the parameters.
 
 ## Known Issues
 
-- Your device needs to be connected for the application to work
-- No confirmation for the Phantom Power switch (use it at your own risk)
+- Your device needs to be connected for the application to work.
+- No confirmation for the Phantom Power switch (use it at your own risk).
 
 ## Download
+
+WIP
 
 ## Disclaimers
 
 - This application is not official. Any damage, misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
 - Differently from the official bluetooth mobile app, this application can't reflect commands from the device. Meaning: if you change a fader in the app, you won't see it reflected in this application.
 - Only basic MIDI commands are implemented (for now - this is a work in progress).
-- Current and future implementations are limited by the [FLOW 8 MIDI Implementation](https://mediadl.musictribe.com/media/PLM/data/docs/P0DNM/QSG_BE_0603-AEW_FLOW-8_WW.pdf#page=23)
+- We do accept requests.
+- Current and future implementations are limited by the [FLOW 8 MIDI Implementation](https://mediadl.musictribe.com/media/PLM/data/docs/P0DNM/QSG_BE_0603-AEW_FLOW-8_WW.pdf#page=23).
 - Later, I found [another solution](https://ikarusstore.com/community/articulo-27-control-your-behringer-flow-8-via-windows-mac-controla-tu-behringer-flow-8-via-windows-y-mac) for controlling this unit. Give it a try and use what is best for you!
 
 ## License
+[GNU GENERAL PUBLIC LICENSE - Version 3](./LICENSE)
 
 ## Donations
