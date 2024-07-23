@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 mod controller;
 pub mod midi;
 mod model;
