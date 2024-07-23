@@ -37,7 +37,7 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 - Differently from the official bluetooth mobile app, this application can't reflect commands from the device. Meaning: if you change a fader in the app, you won't see it reflected in this application.
 - Only basic MIDI commands are implemented (for now - this is a work in progress).
 - Current and future implementations are limited by the [FLOW 8 MIDI Implementation](https://mediadl.musictribe.com/media/PLM/data/docs/P0DNM/QSG_BE_0603-AEW_FLOW-8_WW.pdf#page=23)
-- Later, I found [another solution](https://ikarusstore.com/community/articulo-27-control-your-behringer-flow-8-via-windows-mac-controla-tu-behringer-flow-8-via-windows-y-mac) for controlling this unit
+- Later, I found [another solution](https://ikarusstore.com/community/articulo-27-control-your-behringer-flow-8-via-windows-mac-controla-tu-behringer-flow-8-via-windows-y-mac) for controlling this unit. Give it a try and use what is best for you!
 
 ## License
 
