@@ -46,3 +46,8 @@ WIP
 [GNU GENERAL PUBLIC LICENSE - Version 3](./LICENSE)
 
 ## Donations
+
+If you like to support my work, you can [buy me a
+~~coffee~~ beer.](https://www.buymeacoffee.com/abelroes)
+
+<a href="https://www.buymeacoffee.com/abelroes" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
