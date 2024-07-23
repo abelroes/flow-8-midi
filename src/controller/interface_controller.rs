@@ -5,7 +5,10 @@ use crate::{
     utils::bool_to_u8,
 };
 use iced::{
-    widget::{button, column, row, text, toggler, vertical_slider, Column, Space},
+    widget::{
+        button, column, row, text, toggler, tooltip, tooltip::Position, vertical_slider, Column,
+        Space,
+    },
     Alignment,
 };
 use midir::MidiOutputConnection;
@@ -57,13 +60,20 @@ pub fn add_phantom<'a>(
     column: Column<'a, InterfaceMessage>,
     channel: &'a Channel,
 ) -> Column<'a, InterfaceMessage> {
-    if let PhantomPowerType::Set48v(_) = channel.phantom_pwr.phanton_power_type {
+    if let PhantomPowerType::Set48v(_) = channel.phantom_pwr.phantom_power_type {
         column.push(
-            row![toggler(
-                "48V".to_string(),
-                channel.phantom_pwr.is_on,
-                |_| { InterfaceMessage::PhantomPower(channel.id, channel.phantom_pwr.is_on) }
-            )]
+            row![tooltip(
+                toggler("48V".to_string(), channel.phantom_pwr.is_on, |_| {
+                    InterfaceMessage::PhantomPower(
+                        channel.id,
+                        channel.phantom_pwr.is_on,
+                        channel.phantom_pwr.is_confirmed,
+                    )
+                }),
+                "Click twice if you're sure",
+                Position::FollowCursor,
+            )
+            .gap(5)]
             .align_items(Alignment::Center)
             .padding(25),
         )
@@ -142,8 +152,10 @@ pub fn match_midi_command(message: InterfaceMessage, midi_conn: &mut MidiOutputC
         }
         InterfaceMessage::Balance(bus_id, value)
         | InterfaceMessage::BusBalance(_, bus_id, value) => send_cc(midi_conn, bus_id, 10, value),
-        InterfaceMessage::PhantomPower(chn_id, value) => {
-            send_cc(midi_conn, chn_id, 12, bool_to_u8(!value))
+        InterfaceMessage::PhantomPower(chn_id, value, is_confirmed) => {
+            if is_confirmed {
+                send_cc(midi_conn, chn_id, 12, bool_to_u8(!value))
+            }
         }
         InterfaceMessage::Compressor(chn_id, value) => send_cc(midi_conn, chn_id, 11, value),
         InterfaceMessage::EqLow(chn_id, value) => send_cc(midi_conn, chn_id, 1, value),
