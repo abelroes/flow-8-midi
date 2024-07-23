@@ -4,13 +4,17 @@
 
 # FLOW 8 MIDI Controller
 
-A simple non-official cross-platform desktop MIDI controller for the [Behringer FLOW 8 mixer](https://www.behringer.com/behringer/product?modelCode=0603-AEW).
+A simple non-official ~~cross-platform~~ (only for Windows, momentarily) desktop MIDI controller for the [Behringer FLOW 8 mixer](https://www.behringer.com/behringer/product?modelCode=0603-AEW).
 
 Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/) and 🎹 [midir](https://github.com/Boddlnagg/midir).
 
 <img alt="FLOW 8 MIDI Controller" src="./resources/screenshot.png" width="100%">
 
 </div>
+
+## Download
+
+Download the most recent version [here](https://github.com/abelroes/flow-8-midi/releases).
 
 ## Features
 
@@ -27,10 +31,6 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 ## Known Issues
 
 - Your device needs to be connected for the application to work.
-
-## Download
-
-WIP
 
 ## Disclaimers
 
