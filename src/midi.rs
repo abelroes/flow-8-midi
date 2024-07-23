@@ -54,7 +54,6 @@ fn get_flow_midi_port(midi_output: &MidiOutput, midi_ports: &MidiOutputPorts) ->
 }
 
 pub fn send_cc(midi_conn: &mut MidiOutputConnection, midi_channel: u8, cc: u8, value: u8) {
-    dbg!(midi_channel, cc, value);
     midi_conn
         .send(&[CONTROL_CHANGE_PREFIX | midi_channel, cc, value])
         .unwrap_or_else(|e| {
