@@ -1,3 +1,5 @@
+use std::ops::RangeInclusive;
+
 use midir::MidiOutputConnection;
 
 use super::channels::{
@@ -10,11 +12,14 @@ pub struct FLOW8Controller {
     pub channels: Vec<Channel>,
 }
 
+const CHANNEL_RANGE: RangeInclusive<u8> = 0..=6;
+const BUS_RANGE: RangeInclusive<u8> = 7..=8;
+
 impl FLOW8Controller {
     pub fn new(midi_conn: MidiOutputConnection) -> FLOW8Controller {
         FLOW8Controller {
             midi_conn,
-            channels: (0..=6)
+            channels: CHANNEL_RANGE
                 .map(|c_id| Channel {
                     id: c_id,
                     phantom_pwr: PhantomPower {
@@ -41,9 +46,10 @@ impl FLOW8Controller {
                     ..Default::default()
                 })
                 .collect(),
-            buses: (7..=8)
+            buses: BUS_RANGE
                 .map(|b_id| Bus {
                     id: b_id,
+                    index: b_id / BUS_RANGE.max().unwrap(),
                     bus_type: {
                         match b_id {
                             7 => BusType::Main,

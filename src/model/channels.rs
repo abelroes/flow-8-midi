@@ -1,6 +1,7 @@
 use core::fmt;
 
 pub type BusId = u8;
+pub type BusIdx = u8;
 pub type ChannelId = u8;
 
 #[derive(Copy, Clone, Debug)]
@@ -13,13 +14,12 @@ pub enum AudioConnection {
 
 impl fmt::Display for AudioConnection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let text;
-        match *self {
-            AudioConnection::Xlr => text = "XLR",
-            AudioConnection::Line => text = "Line",
-            AudioConnection::UsbBt => text = "USB/BT",
-            AudioConnection::ComboXlr => text = "Combo",
-        }
+        let text = match *self {
+            AudioConnection::Xlr => "XLR",
+            AudioConnection::Line => "Line",
+            AudioConnection::UsbBt => "USB/BT",
+            AudioConnection::ComboXlr => "Combo",
+        };
         write!(f, "{}", text)
     }
 }
@@ -39,12 +39,11 @@ pub enum BusType {
 
 impl fmt::Display for BusType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let text;
-        match *self {
-            BusType::Fx => text = "FX",
-            BusType::Main => text = "Main",
-            BusType::Monitor => text = "Monitor",
-        }
+        let text = match *self {
+            BusType::Fx => "FX",
+            BusType::Main => "Main",
+            BusType::Monitor => "Monitor",
+        };
         write!(f, "{}", text)
     }
 }
@@ -94,6 +93,7 @@ impl Default for Channel {
 #[derive(Copy, Clone, Debug)]
 pub struct Bus {
     pub id: BusId,
+    pub index: BusIdx,
     pub bus_type: BusType,
     pub bus_strip: BusStrip,
     pub nine_band_eq: NineBandEQ,
@@ -103,6 +103,7 @@ impl Default for Bus {
     fn default() -> Self {
         Self {
             id: 7,
+            index: 0,
             bus_type: BusType::Main,
             bus_strip: BusStrip::default(),
             nine_band_eq: NineBandEQ::default(),

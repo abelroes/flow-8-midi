@@ -2,6 +2,7 @@ use crate::{
     controller::message::InterfaceMessage,
     midi::send_cc,
     model::channels::{Bus, Channel, PhantomPowerType},
+    utils::bool_to_u8,
 };
 use iced::{
     widget::{button, column, row, text, toggler, vertical_slider, Column, Space},
@@ -43,23 +44,11 @@ pub fn add_mute_solo<'a>(
 ) -> Column<'a, InterfaceMessage> {
     column.push(row![
         button("Mute")
-            .on_press(InterfaceMessage::Mute(
-                channel.id,
-                match channel.is_muted {
-                    true => 1,
-                    false => 0,
-                }
-            ))
+            .on_press(InterfaceMessage::Mute(channel.id, channel.is_muted,))
             .padding(5),
         Space::with_width(5),
         button("Solo")
-            .on_press(InterfaceMessage::Solo(
-                channel.id,
-                match channel.is_soloed {
-                    true => 1,
-                    false => 0,
-                }
-            ))
+            .on_press(InterfaceMessage::Solo(channel.id, channel.is_soloed,))
             .padding(5),
     ])
 }
@@ -70,9 +59,11 @@ pub fn add_phantom<'a>(
 ) -> Column<'a, InterfaceMessage> {
     if let PhantomPowerType::Set48v(_) = channel.phantom_pwr.phanton_power_type {
         column.push(
-            row![toggler("48V".to_string(), false, |v| {
-                InterfaceMessage::PhantomPower(channel.id, v.into())
-            })]
+            row![toggler(
+                "48V".to_string(),
+                channel.phantom_pwr.is_on,
+                |_| { InterfaceMessage::PhantomPower(channel.id, channel.phantom_pwr.is_on) }
+            )]
             .align_items(Alignment::Center)
             .padding(25),
         )
@@ -133,7 +124,7 @@ pub fn add_bus_vertical_slider<'a>(
             text("Level"),
             Space::with_height(10),
             vertical_slider(1..=127, bus.bus_strip.level, |v| {
-                InterfaceMessage::Level(bus.id, v)
+                InterfaceMessage::BusLevel(bus.index, bus.id, v)
             })
             .height(400),
         ]
@@ -143,12 +134,17 @@ pub fn add_bus_vertical_slider<'a>(
 
 pub fn match_midi_command(message: InterfaceMessage, midi_conn: &mut MidiOutputConnection) {
     match message {
-        InterfaceMessage::Mute(chn_id, value) => send_cc(midi_conn, chn_id, 5, value),
-        InterfaceMessage::Solo(chn_id, value) => send_cc(midi_conn, chn_id, 6, value),
+        InterfaceMessage::Mute(chn_id, value) => send_cc(midi_conn, chn_id, 5, bool_to_u8(!value)),
+        InterfaceMessage::Solo(chn_id, value) => send_cc(midi_conn, chn_id, 6, bool_to_u8(!value)),
         InterfaceMessage::Gain(chn_id, value) => send_cc(midi_conn, chn_id, 8, value),
-        InterfaceMessage::Level(chn_id, value) => send_cc(midi_conn, chn_id, 7, value),
-        InterfaceMessage::Balance(chn_id, value) => send_cc(midi_conn, chn_id, 10, value),
-        InterfaceMessage::PhantomPower(chn_id, value) => send_cc(midi_conn, chn_id, 12, value),
+        InterfaceMessage::Level(bus_id, value) | InterfaceMessage::BusLevel(_, bus_id, value) => {
+            send_cc(midi_conn, bus_id, 7, value)
+        }
+        InterfaceMessage::Balance(bus_id, value)
+        | InterfaceMessage::BusBalance(_, bus_id, value) => send_cc(midi_conn, bus_id, 10, value),
+        InterfaceMessage::PhantomPower(chn_id, value) => {
+            send_cc(midi_conn, chn_id, 12, bool_to_u8(!value))
+        }
         InterfaceMessage::Compressor(chn_id, value) => send_cc(midi_conn, chn_id, 11, value),
         InterfaceMessage::EqLow(chn_id, value) => send_cc(midi_conn, chn_id, 1, value),
         InterfaceMessage::EqLowMid(chn_id, value) => send_cc(midi_conn, chn_id, 2, value),

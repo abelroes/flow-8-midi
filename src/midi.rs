@@ -16,12 +16,10 @@ pub fn get_midi_conn() -> MidiOutputConnection {
         None => panic!("Invalid output port selected"),
     };
 
-    let conn_out = match midi_out.connect(device_port.unwrap(), "midir-test") {
+    match midi_out.connect(device_port.unwrap(), "midir-test") {
         Ok(conn) => conn,
         Err(_) => panic!("Couldn't connect to Midi port/device"),
-    };
-
-    conn_out
+    }
 }
 
 fn get_midi_output() -> MidiOutput {
@@ -47,11 +45,9 @@ fn get_port_name(midi_output: &MidiOutput, midi_port: &MidiOutputPort) -> Option
 fn get_flow_midi_port(midi_output: &MidiOutput, midi_ports: &MidiOutputPorts) -> usize {
     let mut port_num = 0;
     for (i, p) in midi_ports.iter().enumerate() {
-        let name = get_port_name(&midi_output, p);
-        if name != None {
-            if name.unwrap() == FLOW_DEVICE_STR.to_string() {
-                port_num = i
-            }
+        let name = get_port_name(midi_output, p);
+        if name.is_some() && name.unwrap() == *FLOW_DEVICE_STR {
+            port_num = i
         };
     }
     port_num
