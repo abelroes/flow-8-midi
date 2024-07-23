@@ -2,11 +2,30 @@
 name = "flow-8-midi"
 version = "0.1.0"
 edition = "2021"
+authors = ["Abel Rocha Espinosa <abel.espinosa@alumni.usp.br>"]
+rust-version = "1.79"
+description = "A simple non-official cross-platform desktop MIDI controller for the Behringer FLOW 8 mixer"
+repository = "https://github.com/abelroes/flow-8-mid"
+license = "GNU GPLv3"
+keywords = ["midi", "mixer", "controller", "behringer flow 8", "rust"]
 
 [dependencies]
-iced = "0.12.1"
-image = "0.25.1"
-midir = "0.10.0"
+iced = "^0.12.1"
+image = "^0.25.1"
+midir = "^0.10.0"
+
+[profile.release]
+lto = true
+strip = true
+
+[package.metadata.bundle]
+name = "FLOW 8 MIDI Controller"
+identifier = "br.abelroes.flow-8-midi"
+osx_minimum_system_version = "10.11"
+icon = ["./resources/icon_32x32.ico"]
 
 [dev-dependencies]
-bacon = "2.18.2"
+bacon = "^2.18.2"
+
+[build-dependencies]
+winresource = "0.1.17"
