@@ -27,7 +27,6 @@ Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/)
 ## Known Issues
 
 - Your device needs to be connected for the application to work.
-- No confirmation for the Phantom Power switch (use it at your own risk).
 
 ## Download
 
@@ -43,6 +42,7 @@ WIP
 - Later, I found [another solution](https://ikarusstore.com/community/articulo-27-control-your-behringer-flow-8-via-windows-mac-controla-tu-behringer-flow-8-via-windows-y-mac) for controlling this unit. Give it a try and use what is best for you!
 
 ## License
+
 [GNU GENERAL PUBLIC LICENSE - Version 3](./LICENSE)
 
 ## Donations

@@ -51,7 +51,8 @@ impl fmt::Display for BusType {
 #[derive(Copy, Clone, Debug)]
 pub struct PhantomPower {
     pub is_on: bool,
-    pub phanton_power_type: PhantomPowerType,
+    pub is_confirmed: bool,
+    pub phantom_power_type: PhantomPowerType,
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -80,7 +81,8 @@ impl Default for Channel {
             is_soloed: false,
             phantom_pwr: PhantomPower {
                 is_on: false,
-                phanton_power_type: PhantomPowerType::None,
+                is_confirmed:false,
+                phantom_power_type: PhantomPowerType::None,
             },
             channel_type: ChannelType::Mono,
             audio_connection: AudioConnection::UsbBt,

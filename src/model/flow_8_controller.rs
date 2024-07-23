@@ -24,7 +24,8 @@ impl FLOW8Controller {
                     id: c_id,
                     phantom_pwr: PhantomPower {
                         is_on: false,
-                        phanton_power_type: match c_id {
+                        is_confirmed: false,
+                        phantom_power_type: match c_id {
                             0..=1 => PhantomPowerType::Set48v(0),
                             _ => PhantomPowerType::None,
                         },

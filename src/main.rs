@@ -90,9 +90,16 @@ pub fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMess
         InterfaceMessage::Balance(chn_id, value) => {
             controller.channels[chn_id as usize].channel_strip.balance = value
         }
-        InterfaceMessage::PhantomPower(chn_id, _) => {
-            controller.channels[chn_id as usize].phantom_pwr.is_on =
-                !controller.channels[chn_id as usize].phantom_pwr.is_on;
+        InterfaceMessage::PhantomPower(chn_id, _, is_confirmed) => {
+            if is_confirmed {
+                controller.channels[chn_id as usize].phantom_pwr.is_on =
+                    !controller.channels[chn_id as usize].phantom_pwr.is_on;
+            }
+            controller.channels[chn_id as usize]
+                .phantom_pwr
+                .is_confirmed = !controller.channels[chn_id as usize]
+                .phantom_pwr
+                .is_confirmed;
         }
         InterfaceMessage::Compressor(chn_id, value) => {
             controller.channels[chn_id as usize]
