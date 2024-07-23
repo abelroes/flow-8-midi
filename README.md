@@ -35,7 +35,7 @@ WIP
 
 ## Disclaimers
 
-- This application is not official. Any damage, misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
+- This application is not official. Any damage (to the unit or ant peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
 - Differently from the official bluetooth mobile app, this application can't reflect commands from the device. Meaning: if you change a fader in the app, you won't see it reflected in this application.
 - Only basic MIDI commands are implemented (for now - this is a work in progress).
 - We do accept requests.
