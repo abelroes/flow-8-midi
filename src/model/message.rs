@@ -1,4 +1,4 @@
-use crate::model::channels::{BusId, BusIdx, ChannelId};
+use super::channels::{BusId, BusIdx, ChannelId};
 
 #[derive(Debug, Clone, Copy)]
 pub enum InterfaceMessage {

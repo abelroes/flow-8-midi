@@ -9,13 +9,12 @@ use controller::{
     interface_controller::{
         add_bus, add_channel, finalize_column, match_midi_command, CHANNEL_STRIP_WIDTH,
     },
-    message::InterfaceMessage,
 };
 use image::load_from_memory;
 use midi::get_midi_conn;
 use model::{
     channels::{Bus, Channel},
-    flow_8_controller::FLOW8Controller,
+    flow_8_controller::FLOW8Controller, message::InterfaceMessage,
 };
 
 use iced::{

@@ -1,7 +1,9 @@
 use crate::{
-    controller::message::InterfaceMessage,
     midi::send_cc,
-    model::channels::{Bus, Channel, PhantomPowerType},
+    model::{
+        channels::{Bus, Channel, PhantomPowerType},
+        message::InterfaceMessage,
+    },
     utils::bool_to_u8,
 };
 use iced::{
