@@ -34,8 +34,8 @@ Download the most recent version [here](https://github.com/abelroes/flow-8-midi/
 
 ## Disclaimers
 
-- This application is not official. Any damage (to the unit or ant peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
-- Differently from the official bluetooth mobile app, this application can't reflect commands from the device. Meaning: if you change a fader in the app, you won't see it reflected in this application.
+- This application is not official. Any damage (to the unit or any peripherals), misuse or act that avoids warranty is not our responsibility. Use it at your own risk.
+- Differently from the official bluetooth mobile app, this application can't reflect commands from the device. Meaning: if you change a fader in the mobile app, you won't see it reflected in this application.
 - Only basic MIDI commands are implemented (for now - this is a work in progress).
 - We do accept requests.
 - Current and future implementations are limited by the [FLOW 8 MIDI Implementation](https://mediadl.musictribe.com/media/PLM/data/docs/P0DNM/QSG_BE_0603-AEW_FLOW-8_WW.pdf#page=23).
