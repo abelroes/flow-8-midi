@@ -1,13 +1,14 @@
-use {
-    std::{env, io},
-    winresource::WindowsResource,
-};
+#[cfg(windows)]
+use {std::io, winresource::WindowsResource};
 
-fn main() -> io::Result<()> {
-    if env::var_os("CARGO_CFG_WINDOWS").is_some() {
-        WindowsResource::new()
-            .set_icon("./resources/flow_32x32.ico")
-            .compile()?;
-    }
-    Ok(())
+fn main() {
+    #[cfg(windows)]
+    set_windows_icon().expect("Failed to set Windows icon");
+}
+
+#[cfg(windows)]
+fn set_windows_icon() -> io::Result<()> {
+    WindowsResource::new()
+        .set_icon("./resources/icon.ico")
+        .compile()
 }
