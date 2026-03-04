@@ -6,7 +6,7 @@
 
 A simple non-official cross-platform desktop MIDI controller for the [Behringer FLOW 8 mixer](https://www.behringer.com/behringer/product?modelCode=0603-AEW).
 
-Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/) and 🎹 [midir](https://github.com/Boddlnagg/midir).
+Made with 🦀 [Rust](https://www.rust-lang.org/), 🧊 [iced](https://iced.rs/), 🎹 [midir](https://github.com/Boddlnagg/midir) and 📡 [btleplug](https://github.com/deviceplug/btleplug).
 
 <img alt="FLOW 8 MIDI Controller" src="./resources/screenshot.jpg" width="100%">
 
