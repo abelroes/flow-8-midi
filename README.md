@@ -1,6 +1,6 @@
 <div align="center">
 
-<img alt="FLOW 8 MIDI Logo" src="./resources/flow_32x32.ico"><br>
+<img alt="FLOW 8 MIDI Logo" src="./resources/flow_original.ico"><br>
 
 # FLOW 8 MIDI Controller
 
