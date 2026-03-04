@@ -1,3 +1,4 @@
 pub mod channels;
-pub mod flow_8_controller;
+pub mod flow8;
 pub mod message;
+pub mod page;
