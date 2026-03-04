@@ -1,18 +1,46 @@
 [package]
 name = "flow-8-midi"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 authors = ["Abel Rocha Espinosa <abel.espinosa@alumni.usp.br>"]
-rust-version = "1.79"
+rust-version = "1.85"
 description = "A simple non-official cross-platform desktop MIDI controller for the Behringer FLOW 8 mixer"
-repository = "https://github.com/abelroes/flow-8-mid"
+repository = "https://github.com/abelroes/flow-8-midi"
 license = "GNU GPLv3"
 keywords = ["midi", "mixer", "controller", "behringer flow 8", "rust"]
 
 [dependencies]
-iced = "^0.12.1"
+btleplug = "0.11"
+chrono = "0.4"
+iced = { version = "^0.14", features = ["tokio"] }
+hostname = "0.4"
 image = "^0.25.1"
-midir = "^0.10.0"
+midir = { version = "^0.10.0", features = ["winrt"] }
+tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
+tokio-stream = "0.1"
+uuid = "1"
+
+[[bin]]
+name = "flow-8-midi"
+path = "src/main.rs"
+
+[[bin]]
+name = "calibrate"
+path = "src/bin/calibrate.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "digest"
+path = "src/bin/digest.rs"
+required-features = ["dev-tools"]
+
+[[bin]]
+name = "analyze_names"
+path = "src/bin/analyze_names.rs"
+required-features = ["dev-tools"]
+
+[features]
+dev-tools = []
 
 [profile.release]
 lto = true
@@ -27,5 +55,5 @@ icon = ["./resources/icon_32x32.ico"]
 [dev-dependencies]
 bacon = "^2.18.2"
 
-[build-dependencies]
+[target.'cfg(windows)'.build-dependencies]
 winresource = "0.1.17"
