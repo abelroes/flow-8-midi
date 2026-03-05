@@ -1,14 +1,8 @@
-#[cfg(windows)]
-use {std::io, winresource::WindowsResource};
-
 fn main() {
-    #[cfg(windows)]
-    set_windows_icon().expect("Failed to set Windows icon");
-}
-
-#[cfg(windows)]
-fn set_windows_icon() -> io::Result<()> {
-    WindowsResource::new()
-        .set_icon("./resources/icon.ico")
-        .compile()
+    if std::env::var("CARGO_CFG_TARGET_OS").unwrap_or_default() == "windows" {
+        winresource::WindowsResource::new()
+            .set_icon("./resources/icon.ico")
+            .compile()
+            .expect("Failed to set Windows icon");
+    }
 }
