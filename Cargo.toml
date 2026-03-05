@@ -1,6 +1,6 @@
 [package]
 name = "flow-8-midi"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Abel Rocha Espinosa <abel.espinosa@alumni.usp.br>"]
 rust-version = "1.85"
