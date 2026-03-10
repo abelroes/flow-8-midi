@@ -15,7 +15,8 @@ For general usage, see the **[User Manual](./MANUAL.md)**. For protocol details,
     - [2.1 Debug Build](#21-debug-build)
     - [2.2 Dev-Tools Feature Flag](#22-dev-tools-feature-flag)
     - [2.3 Debug Build (Cross-compilation for Windows)](#23-debug-build-cross-compilation-for-windows)
-    - [2.4 Release Build with Dev-Tools](#24-release-build-with-dev-tools)
+    - [2.4 Simulating Small Screens](#24-simulating-small-screens)
+    - [2.5 Release Build with Dev-Tools](#25-release-build-with-dev-tools)
   - [3. Dev Tools in the UI](#3-dev-tools-in-the-ui)
     - [3.1 Hex Viewer](#31-hex-viewer)
     - [3.2 Copy Hex Dump](#32-copy-hex-dump)
@@ -85,7 +86,26 @@ Then, from PowerShell on the Windows host:
 
 > **Note:** The `gnu` target may require MinGW runtime DLLs. For production Windows binaries, use the `msvc` target compiled natively on Windows or via CI.
 
-### 2.4 Release Build with Dev-Tools
+### 2.4 Simulating Small Screens
+
+Set `FLOW8_SCREEN` to override the detected screen size (format: `WIDTHxHEIGHT`):
+
+```powershell
+$env:FLOW8_SCREEN = "1024x600"
+.\target\x86_64-pc-windows-gnu\release\flow-8-midi.exe
+```
+
+```bash
+FLOW8_SCREEN=1024x600 cargo run
+```
+
+Remove it to restore automatic detection:
+
+```powershell
+Remove-Item Env:FLOW8_SCREEN
+```
+
+### 2.5 Release Build with Dev-Tools
 
 ```bash
 cargo build --release --features dev-tools
