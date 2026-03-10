@@ -57,7 +57,3 @@ bacon = "^2.18.2"
 
 [build-dependencies]
 winresource = "0.1.17"
-bacon = "^2.18.2"
-
-[build-dependencies]
-winresource = "0.1.17"
