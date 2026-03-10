@@ -122,5 +122,6 @@ This creates a GitHub Release with binaries for Linux, Windows, and macOS attach
 * Later, I found [another solution](https://hexler.net/touchosc) for custom control of this unit. Give it a try and use what is best for you!
 
 ## License
+[GNU GENERAL PUBLIC LICENSE - Version 3](./LICENSE)
 
 [GNU GENERAL PUBLIC LICENSE - Version 3](./LICENSE)
