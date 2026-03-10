@@ -49,9 +49,62 @@ fn clipboard_cmd() -> &'static str {
 }
 
 const APPLICATION_NAME: &str = "FLOW 8 MIDI Controller";
-const WINDOW_WIDTH: f32 = 1200.0;
-const WINDOW_HEIGHT: f32 = 700.0;
+const PREFERRED_WIDTH: f32 = 1200.0;
+const PREFERRED_HEIGHT: f32 = 700.0;
+const MIN_WIDTH: f32 = 800.0;
+const MIN_HEIGHT: f32 = 500.0;
 static ICON: &[u8] = include_bytes!("../resources/icon.ico");
+
+fn initial_window_size() -> Size {
+    let (max_w, max_h) = screen_size_override().unwrap_or_else(available_screen_size);
+    Size::new(PREFERRED_WIDTH.min(max_w), PREFERRED_HEIGHT.min(max_h))
+}
+
+fn screen_size_override() -> Option<(f32, f32)> {
+    let val = std::env::var("FLOW8_SCREEN").ok()?;
+    let (w, h) = val.split_once('x')?;
+    Some((w.trim().parse().ok()?, h.trim().parse().ok()?))
+}
+
+#[cfg(target_os = "windows")]
+fn available_screen_size() -> (f32, f32) {
+    #[repr(C)]
+    struct Rect {
+        left: i32,
+        top: i32,
+        right: i32,
+        bottom: i32,
+    }
+
+    #[link(name = "user32")]
+    extern "system" {
+        fn SystemParametersInfoW(action: u32, param: u32, pv: *mut Rect, flags: u32) -> i32;
+        fn GetDpiForSystem() -> u32;
+    }
+
+    const SPI_GETWORKAREA: u32 = 0x0030;
+    let mut rect = Rect { left: 0, top: 0, right: 0, bottom: 0 };
+
+    let ok = unsafe { SystemParametersInfoW(SPI_GETWORKAREA, 0, &mut rect, 0) };
+    if ok != 0 {
+        let dpi = unsafe { GetDpiForSystem() };
+        let scale = if dpi >= 96 { dpi as f32 / 96.0 } else { 1.0 };
+
+        let w = (rect.right - rect.left) as f32 / scale;
+        let h = (rect.bottom - rect.top) as f32 / scale;
+
+        if w > 100.0 && h > 100.0 {
+            return (w - 16.0, h - 40.0);
+        }
+    }
+
+    (PREFERRED_WIDTH, PREFERRED_HEIGHT)
+}
+
+#[cfg(not(target_os = "windows"))]
+fn available_screen_size() -> (f32, f32) {
+    (PREFERRED_WIDTH, PREFERRED_HEIGHT)
+}
 
 fn boot() -> FLOW8Controller {
     logger::init();
@@ -83,7 +136,9 @@ fn main() -> iced::Result {
         .subscription(subscription)
         .antialiasing(true)
         .window(window::Settings {
-            size: Size::new(WINDOW_WIDTH, WINDOW_HEIGHT),
+            size: initial_window_size(),
+            min_size: Some(Size::new(MIN_WIDTH, MIN_HEIGHT)),
+            resizable: true,
             icon: Some(icon),
             position: window::Position::Centered,
             ..Default::default()
