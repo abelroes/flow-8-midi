@@ -25,6 +25,9 @@ use iced::{
     widget::{column, scrollable},
     window, Element, Fill, Size, Subscription, Task, Theme,
 };
+use std::sync::{Mutex, OnceLock};
+
+static SINGLE_INSTANCE_RX: OnceLock<Mutex<Option<std::sync::mpsc::Receiver<()>>>> = OnceLock::new();
 
 fn open_url(url: &str) {
     if cfg!(target_os = "macos") {
@@ -109,6 +112,7 @@ fn available_screen_size() -> (f32, f32) {
 fn boot() -> FLOW8Controller {
     logger::init();
     let mut controller = FLOW8Controller::new();
+    controller.single_instance_receiver = take_single_instance_receiver();
 
     // Load persisted user preferences before the rest of the app boots so the
     // initial theme and sync behavior match the previous session.
@@ -144,6 +148,21 @@ fn theme(state: &FLOW8Controller) -> Theme {
 }
 
 fn main() -> iced::Result {
+    match service::single_instance::start() {
+        Ok(service::single_instance::Startup::Primary(rx)) => {
+            let slot = SINGLE_INSTANCE_RX.get_or_init(|| Mutex::new(None));
+            if let Ok(mut guard) = slot.lock() {
+                *guard = Some(rx);
+            }
+        }
+        Ok(service::single_instance::Startup::SecondaryInstanceNotified) => {
+            return Ok(());
+        }
+        Err(e) => {
+            eprintln!("{}", e);
+        }
+    }
+
     let image = load_from_memory(ICON).unwrap();
     let icon = window::icon::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).unwrap();
 
@@ -162,6 +181,11 @@ fn main() -> iced::Result {
             ..Default::default()
         })
         .run()
+}
+
+fn take_single_instance_receiver() -> Option<std::sync::mpsc::Receiver<()>> {
+    let slot = SINGLE_INSTANCE_RX.get_or_init(|| Mutex::new(None));
+    slot.lock().ok().and_then(|mut guard| guard.take())
 }
 
 fn start_ble_connection(controller: &mut FLOW8Controller) {
@@ -477,6 +501,26 @@ fn update_interface(
         InterfaceMessage::Tick => {
             if controller.main_window_id.is_none() {
                 tasks.push(window::latest().map(InterfaceMessage::MainWindowIdResolved));
+            }
+
+            let show_requested = controller
+                .single_instance_receiver
+                .as_ref()
+                .map(|rx| std::iter::from_fn(|| rx.try_recv().ok()).count() > 0)
+                .unwrap_or(false);
+
+            if show_requested {
+                if let Some(ref tray) = controller.tray_manager {
+                    tray.hide_icon();
+                }
+                controller.window_hidden_to_tray = false;
+                service::tray::show_app_window();
+                log!("[APP] Existing instance activated");
+
+                if let Some(id) = controller.main_window_id {
+                    tasks.push(window::minimize(id, false));
+                    tasks.push(window::gain_focus(id));
+                }
             }
 
             if let Some(ref tray) = controller.tray_manager {
