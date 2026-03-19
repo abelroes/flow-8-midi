@@ -1624,13 +1624,17 @@ dependencies = [
  "bacon",
  "btleplug",
  "chrono",
+ "directories-next",
  "hostname",
  "iced",
  "image",
  "midir",
+ "serde",
  "tokio",
  "tokio-stream",
+ "toml 0.8.23",
  "uuid",
+ "windows-sys 0.61.2",
  "winresource",
 ]
 

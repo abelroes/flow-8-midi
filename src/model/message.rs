@@ -1,7 +1,9 @@
 use super::channels::{BusId, BusIdx, ChannelId, FxSlotId};
 use super::flow8::SyncInterval;
 use super::page::Page;
+use crate::service::tray::TrayEvent;
 use iced::Theme;
+use iced::window;
 
 #[derive(Debug, Clone)]
 pub enum InterfaceMessage {
@@ -44,6 +46,7 @@ pub enum InterfaceMessage {
 
     ThemeChanged(Theme),
     SyncIntervalChanged(SyncInterval),
+    CloseToTrayChanged(bool),
     OpenManual,
     OpenRepository,
     OpenDonation,
@@ -52,6 +55,9 @@ pub enum InterfaceMessage {
     #[cfg(any(debug_assertions, feature = "dev-tools"))]
     CopyHexDump,
     Tick,
+    WindowCloseRequested(window::Id),
+    MainWindowIdResolved(Option<window::Id>),
+    TrayEvent(TrayEvent),
     BleConnect,
     BleRequestDump,
     #[cfg(any(debug_assertions, feature = "dev-tools"))]

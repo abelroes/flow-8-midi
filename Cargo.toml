@@ -12,13 +12,22 @@ keywords = ["midi", "mixer", "controller", "behringer flow 8", "rust"]
 [dependencies]
 btleplug = "0.11"
 chrono = "0.4"
+directories-next = "2"
 iced = { version = "^0.14", features = ["tokio"] }
 hostname = "0.4"
 image = "^0.25.1"
 midir = { version = "^0.10.0", features = ["winrt"] }
+serde = { version = "1", features = ["derive"] }
 tokio = { version = "1", features = ["rt-multi-thread", "sync", "time"] }
 tokio-stream = "0.1"
+toml = "0.8"
 uuid = "1"
+windows-sys = { version = "0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_System_LibraryLoader",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
 
 [[bin]]
 name = "flow-8-midi"

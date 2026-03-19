@@ -28,7 +28,11 @@ pub fn match_midi_command(
         | InterfaceMessage::OpenDonation
         | InterfaceMessage::CopyDebugLog
         | InterfaceMessage::SaveDebugLog
+        | InterfaceMessage::CloseToTrayChanged(_)
         | InterfaceMessage::Tick
+        | InterfaceMessage::WindowCloseRequested(_)
+        | InterfaceMessage::MainWindowIdResolved(_)
+        | InterfaceMessage::TrayEvent(_)
         | InterfaceMessage::BleConnect
         | InterfaceMessage::BleRequestDump
         | InterfaceMessage::SyncIntervalChanged(_) => {}
