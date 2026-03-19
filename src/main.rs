@@ -23,8 +23,11 @@ use model::{flow8::FLOW8Controller, message::InterfaceMessage, page::Page};
 
 use iced::{
     widget::{column, scrollable},
-    window, Element, Fill, Size, Subscription, Theme,
+    window, Element, Fill, Size, Subscription, Task, Theme,
 };
+use std::sync::{Mutex, OnceLock};
+
+static SINGLE_INSTANCE_RX: OnceLock<Mutex<Option<std::sync::mpsc::Receiver<()>>>> = OnceLock::new();
 
 fn open_url(url: &str) {
     if cfg!(target_os = "macos") {
@@ -109,6 +112,24 @@ fn available_screen_size() -> (f32, f32) {
 fn boot() -> FLOW8Controller {
     logger::init();
     let mut controller = FLOW8Controller::new();
+    controller.single_instance_receiver = take_single_instance_receiver();
+
+    // Load persisted user preferences before the rest of the app boots so the
+    // initial theme and sync behavior match the previous session.
+    match service::app_config::load() {
+        Ok(config) => service::app_config::apply_to_controller(&config, &mut controller),
+        Err(e) => log_warn!("[CONFIG] {}", e),
+    }
+
+    match service::tray::TrayManager::new() {
+        Ok(tray_manager) => {
+            controller.tray_manager = Some(tray_manager);
+            log!("[TRAY] System tray manager initialized");
+        }
+        Err(e) => {
+            log_warn!("[TRAY] Tray initialization failed: {}", e);
+        }
+    }
 
     controller.ble_available = ble::is_ble_available();
     if controller.ble_available {
@@ -127,6 +148,21 @@ fn theme(state: &FLOW8Controller) -> Theme {
 }
 
 fn main() -> iced::Result {
+    match service::single_instance::start() {
+        Ok(service::single_instance::Startup::Primary(rx)) => {
+            let slot = SINGLE_INSTANCE_RX.get_or_init(|| Mutex::new(None));
+            if let Ok(mut guard) = slot.lock() {
+                *guard = Some(rx);
+            }
+        }
+        Ok(service::single_instance::Startup::SecondaryInstanceNotified) => {
+            return Ok(());
+        }
+        Err(e) => {
+            eprintln!("{}", e);
+        }
+    }
+
     let image = load_from_memory(ICON).unwrap();
     let icon = window::icon::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).unwrap();
 
@@ -141,9 +177,15 @@ fn main() -> iced::Result {
             resizable: true,
             icon: Some(icon),
             position: window::Position::Centered,
+            exit_on_close_request: false,
             ..Default::default()
         })
         .run()
+}
+
+fn take_single_instance_receiver() -> Option<std::sync::mpsc::Receiver<()>> {
+    let slot = SINGLE_INSTANCE_RX.get_or_init(|| Mutex::new(None));
+    slot.lock().ok().and_then(|mut guard| guard.take())
 }
 
 fn start_ble_connection(controller: &mut FLOW8Controller) {
@@ -224,12 +266,15 @@ fn try_connect_flow8(controller: &mut FLOW8Controller) {
 }
 
 fn subscription(_controller: &FLOW8Controller) -> Subscription<InterfaceMessage> {
-    iced::time::every(std::time::Duration::from_millis(200)).map(|_| InterfaceMessage::Tick)
+    Subscription::batch([
+        iced::time::every(std::time::Duration::from_millis(200)).map(|_| InterfaceMessage::Tick),
+        window::close_requests().map(InterfaceMessage::WindowCloseRequested),
+    ])
 }
 
-fn update(controller: &mut FLOW8Controller, message: InterfaceMessage) {
+fn update(controller: &mut FLOW8Controller, message: InterfaceMessage) -> Task<InterfaceMessage> {
     match_midi_command(&message, &mut controller.midi_conn);
-    update_interface(controller, message);
+    update_interface(controller, message)
 }
 
 fn try_ble_dump_trigger(controller: &FLOW8Controller) -> Option<Result<(), String>> {
@@ -238,6 +283,14 @@ fn try_ble_dump_trigger(controller: &FLOW8Controller) -> Option<Result<(), Strin
         .lock()
         .ok()
         .and_then(|guard| guard.as_ref().map(ble::send_dump_trigger))
+}
+
+fn persist_user_settings(controller: &FLOW8Controller) {
+    // Persist settings immediately when they change. This keeps the behavior
+    // simple and avoids losing UI preferences on crashes or forced exits.
+    if let Err(e) = service::app_config::save_from_controller(controller) {
+        log_warn!("[CONFIG] {}", e);
+    }
 }
 
 fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
@@ -265,7 +318,12 @@ fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
 
 const SNAPSHOT_RESYNC_DELAY_MS: u64 = 500;
 
-fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage) {
+fn update_interface(
+    controller: &mut FLOW8Controller,
+    message: InterfaceMessage,
+) -> Task<InterfaceMessage> {
+    let mut tasks: Vec<Task<InterfaceMessage>> = Vec::new();
+
     match message {
         InterfaceMessage::NavigateTo(page) => {
             controller.current_page = page;
@@ -441,6 +499,51 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
         InterfaceMessage::TapTempo => {}
 
         InterfaceMessage::Tick => {
+            if controller.main_window_id.is_none() {
+                tasks.push(window::latest().map(InterfaceMessage::MainWindowIdResolved));
+            }
+
+            let show_requested = controller
+                .single_instance_receiver
+                .as_ref()
+                .map(|rx| std::iter::from_fn(|| rx.try_recv().ok()).count() > 0)
+                .unwrap_or(false);
+
+            if show_requested {
+                if let Some(ref tray) = controller.tray_manager {
+                    tray.hide_icon();
+                }
+                controller.window_hidden_to_tray = false;
+                service::tray::show_app_window();
+                log!("[APP] Existing instance activated");
+
+                if let Some(id) = controller.main_window_id {
+                    tasks.push(window::minimize(id, false));
+                    tasks.push(window::gain_focus(id));
+                }
+            }
+
+            if let Some(ref tray) = controller.tray_manager {
+                while let Some(tray_event) = tray.try_recv() {
+                    match tray_event {
+                        service::tray::TrayEvent::RestoreRequested => {
+                            tray.hide_icon();
+                            controller.window_hidden_to_tray = false;
+                            service::tray::show_app_window();
+                            log!("[TRAY] Restore requested");
+                        }
+                        service::tray::TrayEvent::ExitRequested => {
+                            tray.shutdown();
+                            controller.window_hidden_to_tray = false;
+                            log!("[TRAY] Exit requested");
+                            if let Some(id) = controller.main_window_id {
+                                return window::close(id);
+                            }
+                        }
+                    }
+                }
+            }
+
             controller.tick_counter = controller.tick_counter.wrapping_add(1);
 
             let pending: Vec<Vec<u8>> = controller
@@ -532,6 +635,28 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 }
             }
         }
+        InterfaceMessage::WindowCloseRequested(id) => {
+            if controller.close_to_tray_on_close {
+                if let Some(ref tray) = controller.tray_manager {
+                    tray.show_icon();
+                    service::tray::hide_app_window();
+                    controller.window_hidden_to_tray = true;
+                    log!("[TRAY] Window hidden to system tray");
+                    return Task::none();
+                }
+            }
+
+            if let Some(ref tray) = controller.tray_manager {
+                tray.shutdown();
+            }
+            return window::close(id);
+        }
+        InterfaceMessage::MainWindowIdResolved(id) => {
+            if controller.main_window_id.is_none() {
+                controller.main_window_id = id;
+            }
+        }
+        InterfaceMessage::TrayEvent(_) => {}
 
         InterfaceMessage::BleConnect => {
             let now = std::time::Instant::now();
@@ -572,10 +697,20 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
 
         InterfaceMessage::ThemeChanged(theme) => {
             controller.theme = theme;
+            persist_user_settings(controller);
         }
         InterfaceMessage::SyncIntervalChanged(interval) => {
             controller.sync_interval = interval;
             log!("[APP] Sync interval changed to {}", interval);
+            persist_user_settings(controller);
+        }
+        InterfaceMessage::CloseToTrayChanged(enabled) => {
+            controller.close_to_tray_on_close = enabled;
+            log!(
+                "[APP] Close button behavior changed: {}",
+                if enabled { "minimize to tray" } else { "close app" }
+            );
+            persist_user_settings(controller);
         }
         InterfaceMessage::OpenManual => {
             open_url("https://github.com/abelroes/flow-8-midi/blob/main/docs/MANUAL.md");
@@ -667,4 +802,6 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             }
         }
     }
+
+    Task::batch(tasks)
 }

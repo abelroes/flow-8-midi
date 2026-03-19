@@ -11,8 +11,10 @@ use super::channels::{
 };
 use super::page::Page;
 use crate::service::ble::{BleConnection, BleStatus};
+use crate::service::tray::TrayManager;
 #[cfg(any(debug_assertions, feature = "dev-tools"))]
 use crate::service::sysex_calibration::CalibrationState;
+use iced::window;
 
 pub const SNAPSHOT_COUNT: usize = 15;
 
@@ -85,11 +87,16 @@ pub struct FLOW8Controller {
     pub ble_last_click: Option<Instant>,
     pub sync_last_click: Option<Instant>,
     pub sync_interval: SyncInterval,
+    pub close_to_tray_on_close: bool,
+    pub single_instance_receiver: Option<mpsc::Receiver<()>>,
     pub last_sync_time: Option<Instant>,
     pub snapshot_names: Vec<Option<String>>,
     pub snapshot_names_receiver: Option<mpsc::Receiver<Vec<Option<String>>>>,
     pub fx_muted: bool,
     pub snapshot_resync_at: Option<Instant>,
+    pub main_window_id: Option<window::Id>,
+    pub window_hidden_to_tray: bool,
+    pub tray_manager: Option<TrayManager>,
     #[cfg(any(debug_assertions, feature = "dev-tools"))]
     pub calibration: CalibrationState,
 }
@@ -182,11 +189,16 @@ impl FLOW8Controller {
             ble_last_click: None,
             sync_last_click: None,
             sync_interval: SyncInterval::Min2,
+            close_to_tray_on_close: true,
+            single_instance_receiver: None,
             last_sync_time: None,
             snapshot_names: vec![None; SNAPSHOT_COUNT],
             snapshot_names_receiver: None,
             fx_muted: false,
             snapshot_resync_at: None,
+            main_window_id: None,
+            window_hidden_to_tray: false,
+            tray_manager: None,
             #[cfg(any(debug_assertions, feature = "dev-tools"))]
             calibration: CalibrationState::new(),
         }

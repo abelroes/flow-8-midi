@@ -6,7 +6,7 @@ use crate::model::{
 #[cfg(any(debug_assertions, feature = "dev-tools"))]
 use crate::service::sysex_parser;
 use iced::{
-    widget::{button, column, container, pick_list, row, scrollable, text, Space},
+    widget::{button, checkbox, column, container, pick_list, row, scrollable, text, Space},
     Center, Element, Fill, Length, Theme,
 };
 
@@ -75,20 +75,32 @@ fn build_appearance_section(controller: &FLOW8Controller) -> Element<'_, Interfa
     .align_y(Center)
     .spacing(8);
 
-    container(
-        column![
-            header,
-            Space::new().height(8),
-            theme_row,
-            Space::new().height(6),
-            sync_row,
-        ]
-        .padding([12, 14])
-        .width(Fill),
-    )
-    .style(container::rounded_box)
-    .width(Fill)
-    .into()
+    let mut section = column![
+        header,
+        Space::new().height(8),
+        theme_row,
+        Space::new().height(6),
+        sync_row,
+    ]
+    .padding([12, 14])
+    .width(Fill);
+
+    #[cfg(target_os = "windows")]
+    {
+        let close_behavior = checkbox(controller.close_to_tray_on_close)
+            .label("Minimize to system tray when closing with X")
+            .on_toggle(InterfaceMessage::CloseToTrayChanged)
+            .size(18)
+            .text_size(12);
+
+        section = section.push(Space::new().height(10));
+        section = section.push(close_behavior);
+    }
+
+    container(section)
+        .style(container::rounded_box)
+        .width(Fill)
+        .into()
 }
 
 fn build_manual_section() -> Element<'static, InterfaceMessage> {
