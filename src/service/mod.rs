@@ -1,6 +1,19 @@
 pub mod ble;
+#[cfg(not(target_os = "windows"))]
+pub mod ble_bond;
+pub mod ble_codec;
+pub mod ble_dispatcher;
+pub mod ble_protocol;
+pub mod ble_session;
+#[cfg(not(target_os = "windows"))]
+pub mod ble_session_btleplug;
+#[cfg(target_os = "windows")]
+pub mod ble_helper_ipc;
+#[cfg(target_os = "windows")]
+pub mod ble_session_win;
+pub mod ble_subscription;
+pub mod client_id;
 pub mod midi;
 pub mod midi_mapper;
+pub mod mixer_state;
 pub mod sysex_parser;
-#[cfg(any(debug_assertions, feature = "dev-tools"))]
-pub mod sysex_calibration;

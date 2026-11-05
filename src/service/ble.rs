@@ -15,8 +15,8 @@ const SCAN_TIMEOUT: Duration = Duration::from_secs(12);
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(15);
 
 const AUTH_PACKET: [u8; 19] = [
-    0x39, 0x01, 0xFD, 0x06, 0x2B, 0x06, 0x39, 0xF1, 0x7F, 0xE7, 0xB7, 0x27, 0x8B, 0x8F, 0x35,
-    0x5A, 0x49, 0x5C, 0x2A,
+    0x39, 0x01, 0xFD, 0x06, 0x2B, 0x06, 0x39, 0xF1, 0x7F, 0xE7, 0xB7, 0x27, 0x8B, 0x8F, 0x35, 0x5A,
+    0x49, 0x5C, 0x2A,
 ];
 const SESSION_START_PACKET: [u8; 3] = [0x37, 0x01, 0x38];
 const CONFIG_REQUEST_PACKET: [u8; 3] = [0x07, 0x01, 0x08];
@@ -99,7 +99,10 @@ async fn get_adapter() -> Result<Adapter, String> {
 }
 
 async fn scan_for_flow8(adapter: &Adapter) -> Result<Peripheral, String> {
-    log!("[BLE] Scanning for FLOW 8 ({}s timeout)...", SCAN_TIMEOUT.as_secs());
+    log!(
+        "[BLE] Scanning for FLOW 8 ({}s timeout)...",
+        SCAN_TIMEOUT.as_secs()
+    );
 
     adapter
         .start_scan(ScanFilter::default())
@@ -122,10 +125,7 @@ async fn scan_for_flow8(adapter: &Adapter) -> Result<Peripheral, String> {
 
     for p in peripherals {
         if let Ok(Some(props)) = p.properties().await {
-            let label = props
-                .local_name
-                .as_deref()
-                .unwrap_or("(unnamed)");
+            let label = props.local_name.as_deref().unwrap_or("(unnamed)");
             let addr = format!("{:?}", props.address);
 
             log_debug!("[BLE]   device: \"{}\" addr={}", label, addr);
@@ -151,7 +151,10 @@ async fn scan_for_flow8(adapter: &Adapter) -> Result<Peripheral, String> {
 }
 
 async fn connect_peripheral(peripheral: &Peripheral) -> Result<(), String> {
-    log!("[BLE] Connecting ({}s timeout)...", CONNECT_TIMEOUT.as_secs());
+    log!(
+        "[BLE] Connecting ({}s timeout)...",
+        CONNECT_TIMEOUT.as_secs()
+    );
 
     tokio::time::timeout(CONNECT_TIMEOUT, peripheral.connect())
         .await
@@ -226,7 +229,11 @@ async fn connect_and_auth(
 
         log!("[BLE] Sending session start...");
         if let Err(e) = peripheral
-            .write(&characteristic, &SESSION_START_PACKET, WriteType::WithResponse)
+            .write(
+                &characteristic,
+                &SESSION_START_PACKET,
+                WriteType::WithResponse,
+            )
             .await
         {
             log_warn!("[BLE] Session start write failed: {}", e);
@@ -293,7 +300,12 @@ fn parse_snapshot_names(data: &[u8]) -> Vec<Option<String>> {
             }
             pos += len;
         } else {
-            log_debug!("[BLE] Snapshot parse ended: pos={} + len={} > payload.len()={}", pos - 1, len, payload.len());
+            log_debug!(
+                "[BLE] Snapshot parse ended: pos={} + len={} > payload.len()={}",
+                pos - 1,
+                len,
+                payload.len()
+            );
             break;
         }
     }
@@ -367,7 +379,11 @@ async fn fetch_snapshot_names(
 
     log!("[BLE] Requesting snapshot names (0x07)...");
     if let Err(e) = peripheral
-        .write(characteristic, &CONFIG_REQUEST_PACKET, WriteType::WithResponse)
+        .write(
+            characteristic,
+            &CONFIG_REQUEST_PACKET,
+            WriteType::WithResponse,
+        )
         .await
     {
         log_warn!("[BLE] Config request write failed: {}", e);

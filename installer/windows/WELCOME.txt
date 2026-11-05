@@ -1,0 +1,22 @@
+FLOW 8 MIDI Controller
+======================
+
+This Setup is the only Windows package you need.
+
+On the next pages you can choose components:
+
+  • FLOW 8 MIDI Controller (required) — app + Bluetooth helper
+  • DirectHCI (optional, recommended) — Windows Bluetooth runtime
+
+Deselect DirectHCI only if you will use USB MIDI and do not need Bluetooth sync.
+
+After installation, open "FLOW 8 MIDI Controller" from the Start Menu.
+
+Bluetooth notes
+---------------
+• The first Bluetooth connection may ask for Administrator permission (UAC).
+• While connected over Bluetooth, other devices on this PC's Bluetooth adapter
+  may pause — prefer a wired keyboard/mouse for that session.
+• USB MIDI remains available without DirectHCI.
+
+You can uninstall from Windows Settings → Apps.

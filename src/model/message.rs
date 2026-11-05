@@ -1,6 +1,7 @@
 use super::channels::{BusId, BusIdx, ChannelId, FxSlotId};
 use super::flow8::SyncInterval;
 use super::page::Page;
+use crate::service::ble_subscription::BleSubscriptionEvent;
 use iced::Theme;
 
 #[derive(Debug, Clone)]
@@ -44,18 +45,30 @@ pub enum InterfaceMessage {
 
     ThemeChanged(Theme),
     SyncIntervalChanged(SyncInterval),
+    CloseToTrayChanged(bool),
+    SelectBus(u8),
+    SelectSetupTab(u8),
+    SelectChannel(u8),
+    SelectFxSlot(u8),
+    EditChannel(u8),
+    EditBus(u8),
+    ToggleAppPref(u8),
+    ToggleRouting(u8),
+    ToggleSnapshotScope(u8),
+    DismissFirmwareNotice,
     OpenManual,
     OpenRepository,
     OpenDonation,
     CopyDebugLog,
     SaveDebugLog,
-    #[cfg(any(debug_assertions, feature = "dev-tools"))]
+    #[cfg(debug_assertions)]
     CopyHexDump,
     Tick,
     BleConnect,
     BleRequestDump,
-    #[cfg(any(debug_assertions, feature = "dev-tools"))]
-    CalibrateStart,
-    #[cfg(any(debug_assertions, feature = "dev-tools"))]
-    DigestRun,
+
+    ConnectBle,
+    ConnectUsb,
+    CancelConnection,
+    BleSubscription(BleSubscriptionEvent),
 }

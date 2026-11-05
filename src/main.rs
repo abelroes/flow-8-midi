@@ -2,16 +2,12 @@
 
 pub mod logger;
 mod model;
+mod platform;
 pub mod service;
 mod view;
 
-use view::{
-    device_select_page::view_device_select, eq_page::view_eq,
-    fx_page::view_fx, mixer_page::view_mixer,
-    nav_bar::view_nav_bar, sends_page::view_sends, settings_page::view_settings,
-    snapshots_page::view_snapshots,
-};
 use image::load_from_memory;
+use model::{flow8::FLOW8Controller, message::InterfaceMessage, page::Page};
 use service::ble;
 use service::midi::{
     connect_input_device, connect_to_device, create_sysex_channel, list_midi_input_devices,
@@ -19,7 +15,12 @@ use service::midi::{
 };
 use service::midi_mapper::match_midi_command;
 use service::sysex_parser;
-use model::{flow8::FLOW8Controller, message::InterfaceMessage, page::Page};
+use view::{
+    connection_page::view_connection, device_select_page::view_device_select, eq_page::view_eq,
+    fx_page::view_fx, home_page::view_home, mixer_page::view_mixer, nav_bar::view_nav_bar,
+    sends_page::view_sends, settings_page::view_settings, snapshots_page::view_snapshots,
+    stage_page::view_stage, widgets::titlebar,
+};
 
 use iced::{
     widget::{column, scrollable},
@@ -83,7 +84,12 @@ fn available_screen_size() -> (f32, f32) {
     }
 
     const SPI_GETWORKAREA: u32 = 0x0030;
-    let mut rect = Rect { left: 0, top: 0, right: 0, bottom: 0 };
+    let mut rect = Rect {
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+    };
 
     let ok = unsafe { SystemParametersInfoW(SPI_GETWORKAREA, 0, &mut rect, 0) };
     if ok != 0 {
@@ -108,27 +114,44 @@ fn available_screen_size() -> (f32, f32) {
 
 fn boot() -> FLOW8Controller {
     logger::init();
+
+    let instance_guard = match platform::single_instance::ensure_single_instance() {
+        Ok(guard) => Some(guard),
+        Err(e) => {
+            eprintln!("[APP] {}", e);
+            std::process::exit(1);
+        }
+    };
+
     let mut controller = FLOW8Controller::new();
+    controller._instance_guard = instance_guard;
+
+    if let Err(e) = platform::tray::create_tray_menu() {
+        log_warn!("[APP] Tray init skipped: {}", e);
+    }
 
     controller.ble_available = ble::is_ble_available();
     if controller.ble_available {
         log!("[APP] BLE adapter detected");
         controller.ble_status = ble::BleStatus::Disconnected;
     } else {
-        log!("[APP] No BLE adapter — auto-sync unavailable");
+        log!("[APP] No BLE adapter — use USB MIDI from Connection page");
     }
 
-    try_connect_flow8(&mut controller);
     controller
 }
 
 fn theme(state: &FLOW8Controller) -> Theme {
-    state.theme.clone()
+    match state.theme {
+        Theme::Light => Theme::Light,
+        _ => view::theme::flow8_theme(),
+    }
 }
 
 fn main() -> iced::Result {
     let image = load_from_memory(ICON).unwrap();
-    let icon = window::icon::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).unwrap();
+    let icon =
+        window::icon::from_rgba(image.as_bytes().to_vec(), image.width(), image.height()).unwrap();
 
     iced::application(boot, update, view)
         .title(APPLICATION_NAME)
@@ -146,42 +169,6 @@ fn main() -> iced::Result {
         .run()
 }
 
-fn start_ble_connection(controller: &mut FLOW8Controller) {
-    if !controller.ble_available {
-        return;
-    }
-    if controller.ble_status == ble::BleStatus::Scanning
-        || controller.ble_status == ble::BleStatus::Connecting
-        || controller.ble_status == ble::BleStatus::Connected
-    {
-        return;
-    }
-
-    let (status_tx, status_rx) = std::sync::mpsc::channel();
-    let (snapshot_tx, snapshot_rx) = std::sync::mpsc::channel();
-    controller.ble_status_receiver = Some(status_rx);
-    controller.snapshot_names_receiver = Some(snapshot_rx);
-    controller.ble_status = ble::BleStatus::Scanning;
-
-    let conn_arc = controller.ble_connection.clone();
-    std::thread::spawn(move || match ble::connect_flow8_ble(status_tx, snapshot_tx) {
-        Ok(conn) => {
-            log!("[BLE] Connection established. Sending dump trigger...");
-            let trigger_result = ble::send_dump_trigger(&conn);
-            if let Ok(mut guard) = conn_arc.lock() {
-                *guard = Some(conn);
-            }
-            match trigger_result {
-                Ok(_) => log!("[BLE] Initial dump trigger sent"),
-                Err(e) => log_error!("[BLE] Initial dump trigger failed: {}", e),
-            }
-        }
-        Err(e) => {
-            log_error!("[BLE] Connection failed: {}", e);
-        }
-    });
-}
-
 fn try_connect_flow8(controller: &mut FLOW8Controller) {
     let output_devices = list_midi_output_devices();
     let flow8_output = match output_devices.iter().find(|d| d.is_flow8) {
@@ -195,7 +182,11 @@ fn try_connect_flow8(controller: &mut FLOW8Controller) {
         }
     };
 
-    log!("[APP] Connecting to \"{}\" (port {})...", flow8_output.name, flow8_output.index);
+    log!(
+        "[APP] Connecting to \"{}\" (port {})...",
+        flow8_output.name,
+        flow8_output.index
+    );
     match connect_to_device(flow8_output.index) {
         Ok(conn) => {
             controller.midi_conn = Some(conn);
@@ -213,23 +204,37 @@ fn try_connect_flow8(controller: &mut FLOW8Controller) {
                 }
             }
 
-            start_ble_connection(controller);
         }
         Err(e) => {
             log!("[APP] Connection failed: {}", e);
             controller.connection_error = Some(e);
-            controller.current_page = Page::DeviceSelect;
+            controller.current_page = Page::Connection;
         }
     }
 }
 
 fn subscription(_controller: &FLOW8Controller) -> Subscription<InterfaceMessage> {
-    iced::time::every(std::time::Duration::from_millis(200)).map(|_| InterfaceMessage::Tick)
+    Subscription::batch([
+        iced::time::every(std::time::Duration::from_millis(200)).map(|_| InterfaceMessage::Tick),
+        service::ble_subscription::ble_subscription().map(InterfaceMessage::BleSubscription),
+    ])
 }
 
 fn update(controller: &mut FLOW8Controller, message: InterfaceMessage) {
-    match_midi_command(&message, &mut controller.midi_conn);
+    let usb_mode =
+        controller.midi_conn.is_some() && !controller.is_ble_active();
+    if usb_mode {
+        match_midi_command(&message, &mut controller.midi_conn);
+    }
     update_interface(controller, message);
+}
+
+fn send_ble(controller: &FLOW8Controller, cmd: service::ble_protocol::BleCommand) {
+    if let Some(ref tx) = controller.ble_cmd_tx {
+        if let Err(e) = tx.try_send(cmd) {
+            log_warn!("[BLE] Command send failed: {}", e);
+        }
+    }
 }
 
 fn try_ble_dump_trigger(controller: &FLOW8Controller) -> Option<Result<(), String>> {
@@ -241,26 +246,50 @@ fn try_ble_dump_trigger(controller: &FLOW8Controller) -> Option<Result<(), Strin
 }
 
 fn view(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
-    if controller.current_page == Page::DeviceSelect {
-        return view_device_select(controller);
+    use iced::widget::container;
+    use view::theme;
+
+    match controller.current_page {
+        Page::Connection => {
+            return container(view_connection(controller))
+                .width(Fill)
+                .height(Fill)
+                .style(theme::app_box)
+                .into();
+        }
+        Page::DeviceSelect => {
+            return container(view_device_select(controller))
+                .width(Fill)
+                .height(Fill)
+                .style(theme::app_box)
+                .into();
+        }
+        _ => {}
     }
 
-    let nav = view_nav_bar(controller);
+    let chrome = column![titlebar(), view_nav_bar(controller)].width(Fill);
 
     let page_content = match controller.current_page {
+        Page::Home => view_home(controller),
         Page::Mixer => view_mixer(controller),
+        Page::Stage => view_stage(controller),
         Page::Eq => view_eq(controller),
         Page::Sends => view_sends(controller),
         Page::Fx => view_fx(controller),
         Page::Snapshots => view_snapshots(controller),
-        Page::Settings => view_settings(controller),
-        Page::DeviceSelect => unreachable!(),
+        Page::Setup | Page::Settings => view_settings(controller),
+        Page::Connection | Page::DeviceSelect => unreachable!(),
     };
 
-    column![nav, scrollable(page_content).height(Fill)]
-        .width(Fill)
-        .height(Fill)
-        .into()
+    container(
+        column![chrome, scrollable(page_content).height(Fill)]
+            .width(Fill)
+            .height(Fill),
+    )
+    .width(Fill)
+    .height(Fill)
+    .style(theme::app_box)
+    .into()
 }
 
 const SNAPSHOT_RESYNC_DELAY_MS: u64 = 500;
@@ -268,7 +297,17 @@ const SNAPSHOT_RESYNC_DELAY_MS: u64 = 500;
 fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage) {
     match message {
         InterfaceMessage::NavigateTo(page) => {
-            controller.current_page = page;
+            match page {
+                Page::Setup => {
+                    controller.setup_tab = 0;
+                    controller.current_page = Page::Setup;
+                }
+                Page::Snapshots => {
+                    controller.setup_tab = 2;
+                    controller.current_page = Page::Snapshots;
+                }
+                other => controller.current_page = other,
+            }
         }
         InterfaceMessage::RetryConnection => {
             log!("[APP] Retrying connection...");
@@ -276,7 +315,10 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             try_connect_flow8(controller);
         }
         InterfaceMessage::Disconnect => {
-            log!("[APP] Disconnecting BLE...");
+            log!("[APP] Disconnecting...");
+            if let Some(ref tx) = controller.ble_control_tx {
+                let _ = tx.try_send(service::ble_session::SessionControl::Cancel);
+            }
             if let Ok(mut guard) = controller.ble_connection.lock() {
                 if let Some(ref conn) = *guard {
                     ble::disconnect(conn);
@@ -287,31 +329,86 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             controller.ble_status_receiver = None;
             controller.snapshot_names_receiver = None;
             controller.last_sync_time = None;
+            controller.session_state = service::ble_session::SessionState::Disconnected;
+            controller.meter.reset();
+            controller.midi_conn = None;
+            controller.midi_input_conn = None;
+            controller.connected_device_name = None;
+            controller.sysex_receiver = None;
             controller.mark_all_unsynced();
+            controller.current_page = Page::Connection;
         }
 
         InterfaceMessage::Mute(ch, _) => {
             let c = &mut controller.channels[ch as usize];
             c.is_muted = !c.is_muted;
+            let muted = c.is_muted;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMute {
+                        id: ch,
+                        value: muted,
+                    },
+                );
+            }
         }
         InterfaceMessage::Solo(ch, _) => {
             let c = &mut controller.channels[ch as usize];
             c.is_soloed = !c.is_soloed;
+            let soloed = c.is_soloed;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelSolo {
+                        id: ch,
+                        value: soloed,
+                    },
+                );
+            }
         }
         InterfaceMessage::Gain(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.channel_strip.gain = value;
             c.channel_strip.gain_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelGain {
+                        id: ch,
+                        db: service::mixer_state::gain_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::Level(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.channel_strip.level = value;
             c.channel_strip.level_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ch,
+                        dst: service::mixer_state::BLE_MAIN,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::Balance(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.channel_strip.balance = value;
             c.channel_strip.balance_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelPan {
+                        id: ch,
+                        value: service::mixer_state::cc_to_balance(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::LowCut(ch, value) => {
             let c = &mut controller.channels[ch as usize];
@@ -325,19 +422,30 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
         }
         InterfaceMessage::PhantomPower(ch) => {
             let now = std::time::Instant::now();
-            let c = &mut controller.channels[ch as usize];
-            let is_double = c
+            let is_double = controller.channels[ch as usize]
                 .phantom_last_click
                 .map(|prev| now.duration_since(prev).as_millis() < 500)
                 .unwrap_or(false);
             if is_double {
-                c.phantom_pwr.is_on = !c.phantom_pwr.is_on;
-                c.phantom_last_click = None;
-                if let Some(conn) = controller.midi_conn.as_mut() {
-                    send_cc(conn, ch, 12, if c.phantom_pwr.is_on { 127 } else { 0 });
+                let on = {
+                    let c = &mut controller.channels[ch as usize];
+                    c.phantom_pwr.is_on = !c.phantom_pwr.is_on;
+                    c.phantom_last_click = None;
+                    c.phantom_pwr.is_on
+                };
+                if controller.is_ble_active() {
+                    send_ble(
+                        controller,
+                        service::ble_protocol::BleCommand::ChannelPhantomPower {
+                            id: ch,
+                            value: on,
+                        },
+                    );
+                } else if let Some(conn) = controller.midi_conn.as_mut() {
+                    send_cc(conn, ch, 12, if on { 127 } else { 0 });
                 }
             } else {
-                c.phantom_last_click = Some(now);
+                controller.channels[ch as usize].phantom_last_click = Some(now);
             }
         }
 
@@ -366,37 +474,106 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             let c = &mut controller.channels[ch as usize];
             c.sends.mon1 = value;
             c.sends.mon1_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ch,
+                        dst: service::mixer_state::BLE_MON1,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::SendMon2(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.mon2 = value;
             c.sends.mon2_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ch,
+                        dst: service::mixer_state::BLE_MON2,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::SendFx1(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.fx1 = value;
             c.sends.fx1_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ch,
+                        dst: service::mixer_state::BLE_FX1,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::SendFx2(ch, value) => {
             let c = &mut controller.channels[ch as usize];
             c.sends.fx2 = value;
             c.sends.fx2_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ch,
+                        dst: service::mixer_state::BLE_FX2,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
 
-        InterfaceMessage::BusLevel(bus_idx, _, value) => {
+        InterfaceMessage::BusLevel(bus_idx, bus_id, value) => {
             let b = &mut controller.buses[bus_idx as usize];
             b.bus_strip.level = value;
             b.bus_strip.level_synced = true;
+            if controller.is_ble_active() {
+                let ble_id = service::mixer_state::ui_bus_id_to_ble(bus_id);
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelMaster {
+                        src: ble_id,
+                        dst: ble_id,
+                        db: service::mixer_state::level_cc_to_db(value),
+                    },
+                );
+            }
         }
-        InterfaceMessage::BusBalance(bus_idx, _, value) => {
+        InterfaceMessage::BusBalance(bus_idx, bus_id, value) => {
             let b = &mut controller.buses[bus_idx as usize];
             b.bus_strip.balance = value;
             b.bus_strip.balance_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelPan {
+                        id: service::mixer_state::ui_bus_id_to_ble(bus_id),
+                        value: service::mixer_state::cc_to_balance(value),
+                    },
+                );
+            }
         }
-        InterfaceMessage::BusLimiter(bus_idx, _, value) => {
+        InterfaceMessage::BusLimiter(bus_idx, bus_id, value) => {
             let b = &mut controller.buses[bus_idx as usize];
             b.bus_strip.limiter = value;
             b.bus_strip.limiter_synced = true;
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::ChannelLimiter {
+                        id: service::mixer_state::ui_bus_id_to_ble(bus_id),
+                        db: service::mixer_state::limiter_cc_to_db(value),
+                    },
+                );
+            }
         }
         InterfaceMessage::BusNineBandEq(bus_idx, _, band_index, value) => {
             let eq = &mut controller.buses[bus_idx as usize].nine_band_eq;
@@ -442,6 +619,7 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
 
         InterfaceMessage::Tick => {
             controller.tick_counter = controller.tick_counter.wrapping_add(1);
+            controller.meter.tick();
 
             let pending: Vec<Vec<u8>> = controller
                 .sysex_receiver
@@ -452,36 +630,8 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
             for data in pending {
                 log!("[SYSEX] Received data ({} bytes)", data.len());
 
-                #[cfg(any(debug_assertions, feature = "dev-tools"))]
-                if controller.calibration.is_running() {
-                    controller.calibration.on_dump_received(data);
-                    continue;
-                }
-
                 if let Some(dump) = sysex_parser::validate_sysex_dump(&data) {
                     sysex_parser::apply_dump_to_controller(&dump, controller);
-                }
-            }
-
-            #[cfg(any(debug_assertions, feature = "dev-tools"))]
-            if controller.calibration.is_running() {
-                let action = controller.calibration.tick();
-                if let Some((midi_ch, cc, value)) = action.send_cc {
-                    if let Some(conn) = controller.midi_conn.as_mut() {
-                        send_cc(conn, midi_ch, cc, value);
-                    }
-                }
-                if let Some((midi_ch, program)) = action.send_pc {
-                    if let Some(conn) = controller.midi_conn.as_mut() {
-                        service::midi::send_program_change(conn, midi_ch, program);
-                    }
-                }
-                if action.trigger_dump {
-                    match try_ble_dump_trigger(controller) {
-                        Some(Ok(_)) => {}
-                        Some(Err(e)) => log_error!("[CALIB] Dump trigger failed: {}", e),
-                        None => log_warn!("[CALIB] No BLE connection for dump trigger"),
-                    }
                 }
             }
 
@@ -534,16 +684,12 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
         }
 
         InterfaceMessage::BleConnect => {
-            let now = std::time::Instant::now();
-            let is_double = controller
-                .ble_last_click
-                .map(|prev| now.duration_since(prev).as_millis() < 500)
-                .unwrap_or(false);
-            if is_double {
-                controller.ble_last_click = None;
-                start_ble_connection(controller);
+            log!("[APP] BLE reconnect via session (subscription)");
+            controller.connection_error = None;
+            if controller.session_state == service::ble_session::SessionState::Active {
+                controller.current_page = Page::Home;
             } else {
-                controller.ble_last_click = Some(now);
+                controller.current_page = Page::Connection;
             }
         }
 
@@ -562,11 +708,20 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
         InterfaceMessage::LoadSnapshot(n) => {
             log!("[APP] Loading snapshot {}", n + 1);
             controller.mark_all_unsynced();
-            controller.snapshot_resync_at = Some(std::time::Instant::now());
+            if controller.is_ble_active() {
+                send_ble(
+                    controller,
+                    service::ble_protocol::BleCommand::SnapshotLoad { slot: n },
+                );
+                send_ble(controller, service::ble_protocol::BleCommand::GetMixerState);
+            } else {
+                controller.snapshot_resync_at = Some(std::time::Instant::now());
+            }
         }
         InterfaceMessage::ResetMixer => {
             log!("[APP] Resetting mixer to default");
             controller.mark_all_unsynced();
+            controller.meter.reset();
             controller.snapshot_resync_at = Some(std::time::Instant::now());
         }
 
@@ -576,6 +731,61 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
         InterfaceMessage::SyncIntervalChanged(interval) => {
             controller.sync_interval = interval;
             log!("[APP] Sync interval changed to {}", interval);
+        }
+        InterfaceMessage::CloseToTrayChanged(enabled) => {
+            controller.tray_config.close_to_tray = enabled;
+            log!("[APP] Close-to-tray: {}", enabled);
+            if enabled {
+                if let Err(e) = platform::tray::create_tray_menu() {
+                    log_warn!("[APP] Tray init failed: {}", e);
+                }
+            }
+        }
+        InterfaceMessage::SelectBus(bus) => {
+            controller.selected_bus = bus;
+            log!("[APP] Bus selector: 0x{:02X}", bus);
+        }
+        InterfaceMessage::SelectSetupTab(tab) => {
+            controller.setup_tab = tab;
+            controller.current_page = match tab {
+                2 => Page::Snapshots,
+                _ => Page::Setup,
+            };
+        }
+        InterfaceMessage::SelectChannel(ch) => {
+            controller.selected_channel = ch;
+            controller.detail_is_bus = false;
+        }
+        InterfaceMessage::SelectFxSlot(slot) => {
+            controller.selected_fx = slot.min(1);
+        }
+        InterfaceMessage::EditChannel(ch) => {
+            controller.selected_channel = ch;
+            controller.detail_is_bus = false;
+            controller.current_page = Page::Eq;
+        }
+        InterfaceMessage::EditBus(bus_idx) => {
+            controller.selected_bus_edit = bus_idx;
+            controller.detail_is_bus = true;
+            controller.current_page = Page::Eq;
+        }
+        InterfaceMessage::ToggleAppPref(idx) => {
+            if let Some(flag) = controller.app_prefs.get_mut(idx as usize) {
+                *flag = !*flag;
+            }
+        }
+        InterfaceMessage::ToggleRouting(idx) => {
+            if let Some(flag) = controller.routing_flags.get_mut(idx as usize) {
+                *flag = !*flag;
+            }
+        }
+        InterfaceMessage::ToggleSnapshotScope(idx) => {
+            if let Some(flag) = controller.snapshot_scope.get_mut(idx as usize) {
+                *flag = !*flag;
+            }
+        }
+        InterfaceMessage::DismissFirmwareNotice => {
+            controller.firmware_notice_dismissed = true;
         }
         InterfaceMessage::OpenManual => {
             open_url("https://github.com/abelroes/flow-8-midi/blob/main/docs/MANUAL.md");
@@ -602,7 +812,7 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 log_warn!("[APP] Could not access clipboard");
             }
         }
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
+        #[cfg(debug_assertions)]
         InterfaceMessage::CopyHexDump => {
             if let Some(ref dump) = controller.last_sysex_dump {
                 let hex = sysex_parser::format_hex_dump(dump);
@@ -635,36 +845,137 @@ fn update_interface(controller: &mut FLOW8Controller, message: InterfaceMessage)
                 Err(e) => log_error!("[APP] Failed to save debug log: {}", e),
             }
         }
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
-        InterfaceMessage::CalibrateStart => {
-            if controller.calibration.is_running() {
-                log_warn!("[APP] Calibration already in progress");
-                return;
+
+        InterfaceMessage::ConnectBle => {
+            log!("[APP] Connect BLE requested");
+            controller.connection_error = None;
+            if controller.session_state == service::ble_session::SessionState::Active {
+                controller.current_page = Page::Home;
+            } else if let Some(ref tx) = controller.ble_control_tx {
+                let _ = tx.try_send(service::ble_session::SessionControl::Connect);
+                #[cfg(target_os = "windows")]
+                {
+                    controller.session_state = service::ble_session::SessionState::Preparing;
+                }
+                #[cfg(not(target_os = "windows"))]
+                {
+                    controller.session_state = service::ble_session::SessionState::Scanning;
+                }
+            } else {
+                controller.connection_error =
+                    Some("Bluetooth session not ready yet — try again in a moment.".into());
             }
-            if controller.midi_conn.is_none() {
-                log_warn!("[APP] Cannot calibrate: no MIDI connection");
-                return;
-            }
-            let has_ble = controller
-                .ble_connection
-                .lock()
-                .ok()
-                .map(|g| g.is_some())
-                .unwrap_or(false);
-            if !has_ble {
-                log_warn!("[APP] Cannot calibrate: no BLE connection (needed to trigger dumps)");
-                return;
-            }
-            log!("[APP] Starting SysEx calibration...");
-            controller.calibration.start();
         }
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
-        InterfaceMessage::DigestRun => {
-            log!("[APP] Running file-based digest...");
-            match service::sysex_calibration::run_file_based_digest() {
-                Ok(summary) => log!("[APP] Digest complete: {}", summary),
-                Err(e) => log_warn!("[APP] Digest failed: {}", e),
+        InterfaceMessage::ConnectUsb => {
+            log!("[APP] Connect USB requested");
+            if let Some(ref tx) = controller.ble_control_tx {
+                let _ = tx.try_send(service::ble_session::SessionControl::Cancel);
             }
+            try_connect_flow8(controller);
+        }
+        InterfaceMessage::CancelConnection => {
+            log!("[APP] Connection cancelled");
+            if let Some(ref tx) = controller.ble_control_tx {
+                let _ = tx.try_send(service::ble_session::SessionControl::Cancel);
+            }
+            controller.connection_error = Some("Connection cancelled".to_string());
+            controller.session_state = service::ble_session::SessionState::Disconnected;
+            controller.ble_status = ble::BleStatus::Disconnected;
+        }
+        InterfaceMessage::BleSubscription(event) => match event {
+            service::ble_subscription::BleSubscriptionEvent::Ready {
+                command_tx,
+                control_tx,
+            } => {
+                log!("[BLE] Session command channel ready");
+                controller.ble_cmd_tx = Some(command_tx);
+                controller.ble_control_tx = Some(control_tx);
+            }
+            service::ble_subscription::BleSubscriptionEvent::StateChanged(state) => {
+                let was_active =
+                    controller.session_state == service::ble_session::SessionState::Active;
+                controller.session_state = state;
+                log!("[BLE] Session state: {}", state);
+                if state == service::ble_session::SessionState::Active && !was_active {
+                    controller.connection_error = None;
+                    controller.ble_status = ble::BleStatus::Connected;
+                    if matches!(
+                        controller.current_page,
+                        Page::Connection | Page::DeviceSelect
+                    ) {
+                        controller.current_page = Page::Home;
+                    }
+                }
+                if state == service::ble_session::SessionState::PairingRequired {
+                    controller.current_page = Page::Connection;
+                }
+            }
+            service::ble_subscription::BleSubscriptionEvent::Event(ble_event) => {
+                handle_ble_event(controller, ble_event);
+            }
+            service::ble_subscription::BleSubscriptionEvent::Disconnected(reason) => {
+                log!("[BLE] Disconnected: {}", reason);
+                controller.session_state = service::ble_session::SessionState::Disconnected;
+                controller.ble_status = ble::BleStatus::Disconnected;
+                controller.connection_error = Some(reason);
+                controller.meter.reset();
+                if !matches!(
+                    controller.current_page,
+                    Page::Connection | Page::DeviceSelect
+                ) {
+                    controller.current_page = Page::Connection;
+                }
+            }
+        },
+    }
+}
+
+fn handle_ble_event(controller: &mut FLOW8Controller, event: service::ble_protocol::BleEvent) {
+    use service::ble_protocol::BleEvent;
+    match event {
+        BleEvent::MeterUpdate(data) => {
+            controller.meter.apply_update(&data.levels, data.gain_reduction);
+        }
+        BleEvent::MixerState(payload) => {
+            match service::mixer_state::decode_mixer_state(&payload) {
+                Ok(data) => {
+                    service::mixer_state::apply_mixer_state(&data, controller);
+                    log!(
+                        "[BLE] MixerState applied ({} inputs, {} outputs)",
+                        data.inputs.len(),
+                        data.outputs.len()
+                    );
+                }
+                Err(e) => log_error!("[BLE] MixerState decode failed: {}", e),
+            }
+        }
+        BleEvent::HandshakeHost(data) => {
+            controller.protocol_version = Some(data.protocol_version);
+            controller.firmware_version = Some(format!("build {}", data.firmware_build));
+        }
+        BleEvent::SnapshotList(names) => {
+            controller.snapshot_names = names;
+        }
+        BleEvent::ChannelConnection(data) => {
+            if let Some(ch) = controller.channels.iter_mut().find(|c| c.id == data.id) {
+                if data.sub_channel == 0 {
+                    ch.connected_l = data.connected;
+                } else {
+                    ch.connected_r = data.connected;
+                }
+            }
+        }
+        BleEvent::PairingRequired => {
+            controller.session_state = service::ble_session::SessionState::PairingRequired;
+            controller.current_page = Page::Connection;
+        }
+        BleEvent::Disconnected(reason) => {
+            log!("[BLE] Event disconnect: {}", reason);
+            controller.connection_error = Some(reason);
+            controller.meter.reset();
+        }
+        other => {
+            log_debug!("[BLE] Event: {:?}", other);
         }
     }
 }

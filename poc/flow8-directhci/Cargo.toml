@@ -1,0 +1,32 @@
+[package]
+name = "flow8-directhci-poc"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.87"
+publish = false
+description = "Disposable Windows POC: FLOW 8 BLE handshake via DirectHCI (bypasses WinRT CCCD)"
+license = "GPL-3.0-only"
+
+[[bin]]
+name = "flow8-directhci-poc"
+path = "src/main.rs"
+
+# Alternate output name when the primary .exe is locked on Windows.
+[[bin]]
+name = "flow8-directhci-poc3"
+path = "src/main.rs"
+
+[[bin]]
+name = "flow8-directhci-prepare"
+path = "src/bin/prepare.rs"
+
+[dependencies]
+# Sibling checkout: /home/abel/projects/DirectHCI (or set via .cargo/config.toml paths)
+directhci-ble = { path = "../../../DirectHCI/crates/directhci-ble" }
+directhci-client = { path = "../../../DirectHCI/crates/directhci-client" }
+directhci-windows = { path = "../../../DirectHCI/crates/directhci-windows" }
+dirs = "5"
+rand = "0.8"
+tokio = { version = "1", features = ["rt", "macros", "time", "sync", "signal"] }
+
+[dev-dependencies]

@@ -1,0 +1,2753 @@
+[
+  {
+    "type": 0,
+    "name": "ChannelPan",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_pan.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 1,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_pan.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 1,
+    "name": "ChannelSolo",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_solo.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_solo.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 2,
+    "name": "ChannelGain",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_gain.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 5,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_gain.db",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 3,
+    "name": "ChannelGEQ",
+    "dir": 3,
+    "mid": 2,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_geq.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_geq.geq_id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_geq.freq",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 6,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_geq.q",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 32,
+        "scale": 4,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_geq.gain",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 4,
+    "name": "ChannelHPF",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_hpf.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_hpf.on",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_hpf.freq",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 5,
+    "name": "ChannelLabel",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 10,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_label",
+        "child": "0x1254d0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 4,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "icon",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 7,
+            "off": 4,
+            "scale": 0,
+            "count": 21,
+            "stride": 0,
+            "name": "text",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 6,
+    "name": "ChannelMaster",
+    "dir": 3,
+    "mid": 2,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_master.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_master.dst",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 3,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_master.db",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 7,
+    "name": "GetSnapshotList",
+    "dir": 2,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 8,
+    "name": "ChannelMute",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_mute.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_mute.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 9,
+    "name": "ChannelPEQ",
+    "dir": 3,
+    "mid": 2,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_peq.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_peq.peq_id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_peq.freq",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 6,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_peq.q",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 32,
+        "scale": 4,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_peq.gain",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 16,
+    "name": "ChannelPhase",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_phase.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_phase.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 17,
+    "name": "FXSetup",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.val1",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.val2",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 27,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.val3",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 28,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.enable_main",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 29,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.enable_mon1",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 30,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_setup.enable_mon2",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 18,
+    "name": "SnapshotDelete",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 1,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_delete.slot",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 19,
+    "name": "ChannelSqueezer",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_squeezer.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 2,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_squeezer.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 20,
+    "name": "ChannelLimiter",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_limiter.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 5,
+        "off": 28,
+        "scale": 5,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_limiter.db",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 21,
+    "name": "ChannelPhantomPower",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_phantom_power.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_phantom_power.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 22,
+    "name": "GetChannelState",
+    "dir": 2,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.get_channel_state.id",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 23,
+    "name": "InputChannelState",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 10,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.input_channel_state",
+        "child": "0x125ce0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "hpf_on",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 3,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "phase",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 4,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "phantom_power",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 5,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "connected_l",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 6,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "connected_r",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 7,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "solo",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 8,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "reserved",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 5,
+            "count": 0,
+            "stride": 0,
+            "name": "gain",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 16,
+            "scale": 2,
+            "count": 0,
+            "stride": 0,
+            "name": "squeezer",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 4,
+            "off": 20,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "hpf_frequency",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 24,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "balance",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 28,
+            "scale": 0,
+            "count": 4,
+            "stride": 4,
+            "name": "peq_gain",
+            "child": "0x1279c0",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 4,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 44,
+            "scale": 0,
+            "count": 4,
+            "stride": 2,
+            "name": "peq_freq",
+            "child": "0x127a20",
+            "child_fields": [
+              {
+                "type": 4,
+                "off": 0,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 52,
+            "scale": 0,
+            "count": 4,
+            "stride": 4,
+            "name": "peq_q",
+            "child": "0x127a80",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 6,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 10,
+            "off": 68,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "label",
+            "child": "0x1254d0",
+            "child_fields": [
+              {
+                "type": 2,
+                "off": 0,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "id",
+                "child": null,
+                "child_fields": null
+              },
+              {
+                "type": 4,
+                "off": 2,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "icon",
+                "child": null,
+                "child_fields": null
+              },
+              {
+                "type": 7,
+                "off": 4,
+                "scale": 0,
+                "count": 21,
+                "stride": 0,
+                "name": "text",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 24,
+    "name": "OutputChannelState",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 10,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.output_channel_state",
+        "child": "0x1260a0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "solo",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 4,
+            "scale": 3,
+            "count": 0,
+            "stride": 0,
+            "name": "vol",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "pan",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 8,
+            "scale": 5,
+            "count": 0,
+            "stride": 0,
+            "name": "limiter",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 16,
+            "scale": 0,
+            "count": 7,
+            "stride": 4,
+            "name": "input_channel_gains",
+            "child": "0x126580",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 3,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 44,
+            "scale": 0,
+            "count": 9,
+            "stride": 4,
+            "name": "geq_gain",
+            "child": "0x1279c0",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 4,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 80,
+            "scale": 0,
+            "count": 9,
+            "stride": 2,
+            "name": "geq_freq",
+            "child": "0x127a20",
+            "child_fields": [
+              {
+                "type": 4,
+                "off": 0,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 100,
+            "scale": 0,
+            "count": 9,
+            "stride": 4,
+            "name": "geq_q",
+            "child": "0x127a80",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 6,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 9,
+            "off": 136,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "delay",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 25,
+    "name": "SnapshotSave",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 1,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_save.slot",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 10,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_save.info",
+        "child": "0x126340",
+        "child_fields": [
+          {
+            "type": 7,
+            "off": 0,
+            "scale": 0,
+            "count": 21,
+            "stride": 0,
+            "name": "name",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 32,
+    "name": "SnapshotLoad",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 1,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_load.slot",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 33,
+    "name": "MeterRequest",
+    "dir": 2,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.meter_request.num_channels",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 11,
+        "off": 25,
+        "scale": 0,
+        "count": 15,
+        "stride": 1,
+        "name": "u.meter_request.channels",
+        "child": "0x126490",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 34,
+    "name": "MeterUpdate",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 15,
+        "stride": 4,
+        "name": "u.meter_update.values",
+        "child": "0x126580",
+        "child_fields": [
+          {
+            "type": 5,
+            "off": 0,
+            "scale": 3,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      },
+      {
+        "type": 4,
+        "off": 84,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.meter_update.gr_values",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 35,
+    "name": "GetChannelLabels",
+    "dir": 2,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 36,
+    "name": "ChannelLabels",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_labels.num_labels",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 11,
+        "off": 26,
+        "scale": 0,
+        "count": 10,
+        "stride": 26,
+        "name": "u.channel_labels.labels",
+        "child": "0x1254d0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 4,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "icon",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 7,
+            "off": 4,
+            "scale": 0,
+            "count": 21,
+            "stride": 0,
+            "name": "text",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 37,
+    "name": "Setting",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 8,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.setting",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 38,
+    "name": "GetSetting",
+    "dir": 2,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.get_setting.id",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 39,
+    "name": "SnapshotList",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 15,
+        "stride": 21,
+        "name": "u.snapshot_list.snapshots",
+        "child": "0x126340",
+        "child_fields": [
+          {
+            "type": 7,
+            "off": 0,
+            "scale": 0,
+            "count": 21,
+            "stride": 0,
+            "name": "name",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 41,
+    "name": "FactoryReset",
+    "dir": 2,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 48,
+    "name": "FXChannelState",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 10,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_channel_state",
+        "child": "0x126820",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_main",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 3,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_mon1",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 4,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_mon2",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 8,
+            "scale": 3,
+            "count": 0,
+            "stride": 0,
+            "name": "vol",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "pan",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 16,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val1",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 17,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val2",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 18,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val3",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 19,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "preset",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 20,
+            "scale": 0,
+            "count": 7,
+            "stride": 4,
+            "name": "input_channel_gains",
+            "child": "0x126580",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 3,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 48,
+            "scale": 0,
+            "count": 2,
+            "stride": 4,
+            "name": "aux_channel_gains",
+            "child": "0x126580",
+            "child_fields": []
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 49,
+    "name": "FXLoadPreset",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_load_preset.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_load_preset.preset",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 50,
+    "name": "SnapshotRename",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 1,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_rename.slot",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 10,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.snapshot_rename.info",
+        "child": "0x126340",
+        "child_fields": [
+          {
+            "type": 7,
+            "off": 0,
+            "scale": 0,
+            "count": 21,
+            "stride": 0,
+            "name": "name",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 51,
+    "name": "ChannelConnectionState",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_connection_state.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_connection_state.sub_channel",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_connection_state.connected",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 52,
+    "name": "ChannelSimulateConnectionState",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_simulate_connection_state.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_simulate_connection_state.sub_channel",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_simulate_connection_state.connected",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 53,
+    "name": "HandshakeHost",
+    "dir": 1,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 16,
+        "stride": 1,
+        "name": "u.handshake_host.id.b",
+        "child": "0x126dc0",
+        "child_fields": [
+          {
+            "type": 3,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      },
+      {
+        "type": 6,
+        "off": 40,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.handshake_host.pairing_any",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 42,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.handshake_host.protocol_version",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 44,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.handshake_host.firmware_buildnr",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 54,
+    "name": "HandshakeReply",
+    "dir": 3,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 55,
+    "name": "GetMixerState",
+    "dir": 3,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 56,
+    "name": "MixerState",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 7,
+        "stride": 96,
+        "name": "u.mixer_state.input_channels",
+        "child": "0x125ce0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "hpf_on",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 3,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "phase",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 4,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "phantom_power",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 5,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "connected_l",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 6,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "connected_r",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 7,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "solo",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 8,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "reserved",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 5,
+            "count": 0,
+            "stride": 0,
+            "name": "gain",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 16,
+            "scale": 2,
+            "count": 0,
+            "stride": 0,
+            "name": "squeezer",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 4,
+            "off": 20,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "hpf_frequency",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 24,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "balance",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 28,
+            "scale": 0,
+            "count": 4,
+            "stride": 4,
+            "name": "peq_gain",
+            "child": "0x1279c0",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 4,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 44,
+            "scale": 0,
+            "count": 4,
+            "stride": 2,
+            "name": "peq_freq",
+            "child": "0x127a20",
+            "child_fields": [
+              {
+                "type": 4,
+                "off": 0,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 52,
+            "scale": 0,
+            "count": 4,
+            "stride": 4,
+            "name": "peq_q",
+            "child": "0x127a80",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 6,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 10,
+            "off": 68,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "label",
+            "child": "0x1254d0",
+            "child_fields": [
+              {
+                "type": 2,
+                "off": 0,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "id",
+                "child": null,
+                "child_fields": null
+              },
+              {
+                "type": 4,
+                "off": 2,
+                "scale": 0,
+                "count": 0,
+                "stride": 0,
+                "name": "icon",
+                "child": null,
+                "child_fields": null
+              },
+              {
+                "type": 7,
+                "off": 4,
+                "scale": 0,
+                "count": 21,
+                "stride": 0,
+                "name": "text",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": 11,
+        "off": 696,
+        "scale": 0,
+        "count": 3,
+        "stride": 140,
+        "name": "u.mixer_state.output_channels",
+        "child": "0x1260a0",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "solo",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 4,
+            "scale": 3,
+            "count": 0,
+            "stride": 0,
+            "name": "vol",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "pan",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 8,
+            "scale": 5,
+            "count": 0,
+            "stride": 0,
+            "name": "limiter",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 16,
+            "scale": 0,
+            "count": 7,
+            "stride": 4,
+            "name": "input_channel_gains",
+            "child": "0x126580",
+            "child_fields": [
+              {
+                "type": 5,
+                "off": 0,
+                "scale": 3,
+                "count": 0,
+                "stride": 0,
+                "name": "",
+                "child": null,
+                "child_fields": null
+              }
+            ]
+          },
+          {
+            "type": 11,
+            "off": 44,
+            "scale": 0,
+            "count": 9,
+            "stride": 4,
+            "name": "geq_gain",
+            "child": "0x1279c0",
+            "child_fields": []
+          },
+          {
+            "type": 11,
+            "off": 80,
+            "scale": 0,
+            "count": 9,
+            "stride": 2,
+            "name": "geq_freq",
+            "child": "0x127a20",
+            "child_fields": []
+          },
+          {
+            "type": 11,
+            "off": 100,
+            "scale": 0,
+            "count": 9,
+            "stride": 4,
+            "name": "geq_q",
+            "child": "0x127a80",
+            "child_fields": []
+          },
+          {
+            "type": 9,
+            "off": 136,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "delay",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      },
+      {
+        "type": 11,
+        "off": 1116,
+        "scale": 0,
+        "count": 2,
+        "stride": 56,
+        "name": "u.mixer_state.fx_channels",
+        "child": "0x126820",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "id",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 1,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "muted",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 2,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_main",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 3,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_mon1",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 6,
+            "off": 4,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "enable_mon2",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 8,
+            "scale": 3,
+            "count": 0,
+            "stride": 0,
+            "name": "vol",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 5,
+            "off": 12,
+            "scale": 1,
+            "count": 0,
+            "stride": 0,
+            "name": "pan",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 16,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val1",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 17,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val2",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 18,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "val3",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 2,
+            "off": 19,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "preset",
+            "child": null,
+            "child_fields": null
+          },
+          {
+            "type": 11,
+            "off": 20,
+            "scale": 0,
+            "count": 7,
+            "stride": 4,
+            "name": "input_channel_gains",
+            "child": "0x126580",
+            "child_fields": []
+          },
+          {
+            "type": 11,
+            "off": 48,
+            "scale": 0,
+            "count": 2,
+            "stride": 4,
+            "name": "aux_channel_gains",
+            "child": "0x126580",
+            "child_fields": []
+          }
+        ]
+      },
+      {
+        "type": 5,
+        "off": 1228,
+        "scale": 3,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.headphone_volume_db",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1232,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.btusb",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1233,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.phones_only",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1234,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.foot_pedal_switch",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1235,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.mute_inputs",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1240,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.usb_streaming_mode",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1242,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.ch_56_usb_12",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1243,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.ch_78_usb_34",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1244,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.mon_stereo_link",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1245,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.hp_use_mon",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1246,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.hp_use_post",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1247,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.main_10dbv_pad",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1248,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.mon_10dbv_pad",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 1249,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.mon_use_post",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 1236,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.fx_tempo",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 1238,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.selected_output_channel",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 1,
+        "off": 1239,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.last_snapshot",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 1241,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.mon_12_routing",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 1250,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.mixer_state.snapshot_scope",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 57,
+    "name": "HandshakeClient",
+    "dir": 2,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 16,
+        "stride": 1,
+        "name": "u.handshake_client.id.b",
+        "child": "0x126dc0",
+        "child_fields": [
+          {
+            "type": 3,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 64,
+    "name": "FXTempo",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 4,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.fx_tempo.bpm",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 65,
+    "name": "OutputChannelSelect",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.output_channel_select.id",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 66,
+    "name": "RequestData",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 7,
+        "off": 24,
+        "scale": 0,
+        "count": 33,
+        "stride": 0,
+        "name": "u.request_data.name",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 57,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.request_data.stream",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 58,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.request_data.ack_interval",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 67,
+    "name": "TransferData",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 4,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.transfer_data.total_size",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 4,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.transfer_data.pos",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 28,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.transfer_data.stream",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 11,
+        "off": 29,
+        "scale": 0,
+        "count": 120,
+        "stride": 1,
+        "name": "u.transfer_data.data",
+        "child": "0x126dc0",
+        "child_fields": [
+          {
+            "type": 3,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 68,
+    "name": "AckData",
+    "dir": 3,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 4,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.ack_data.pos",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 26,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.ack_data.stream",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 69,
+    "name": "SetMIDI",
+    "dir": 3,
+    "mid": -1,
+    "fields": [
+      {
+        "type": 11,
+        "off": 24,
+        "scale": 0,
+        "count": 128,
+        "stride": 1,
+        "name": "u.set_midi.values",
+        "child": "0x126490",
+        "child_fields": [
+          {
+            "type": 2,
+            "off": 0,
+            "scale": 0,
+            "count": 0,
+            "stride": 0,
+            "name": "",
+            "child": null,
+            "child_fields": null
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": 70,
+    "name": "GetMIDI",
+    "dir": 2,
+    "mid": -1,
+    "fields": []
+  },
+  {
+    "type": 71,
+    "name": "SetFXPresetDesc",
+    "dir": 2,
+    "mid": 0,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.preset_id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 7,
+        "off": 26,
+        "scale": 0,
+        "count": 64,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.name",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 7,
+        "off": 90,
+        "scale": 0,
+        "count": 64,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.param1",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 7,
+        "off": 154,
+        "scale": 0,
+        "count": 64,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.param2[0]",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 7,
+        "off": 218,
+        "scale": 0,
+        "count": 64,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.param2[1]",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 2,
+        "off": 282,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.set_fx_preset_desc.flags",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 72,
+    "name": "SetFXPresetDescAck",
+    "dir": 1,
+    "mid": 0,
+    "fields": []
+  },
+  {
+    "type": 73,
+    "name": "ChannelReserved",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_reserved.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 6,
+        "off": 25,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_reserved.value",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 74,
+    "name": "ChannelDelay",
+    "dir": 3,
+    "mid": 1,
+    "fields": [
+      {
+        "type": 2,
+        "off": 24,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_delay.id",
+        "child": null,
+        "child_fields": null
+      },
+      {
+        "type": 9,
+        "off": 28,
+        "scale": 0,
+        "count": 0,
+        "stride": 0,
+        "name": "u.channel_delay.val",
+        "child": null,
+        "child_fields": null
+      }
+    ]
+  },
+  {
+    "type": 75,
+    "name": "SysexMidiDump",
+    "dir": 3,
+    "mid": 0,
+    "fields": []
+  }
+]

@@ -13,7 +13,6 @@ pub fn create_sysex_channel() -> (mpsc::Sender<Vec<u8>>, mpsc::Receiver<Vec<u8>>
     mpsc::channel()
 }
 
-
 #[derive(Clone, Debug)]
 pub struct MidiDeviceInfo {
     pub index: usize,
@@ -38,8 +37,15 @@ pub fn list_midi_output_devices() -> Vec<MidiDeviceInfo> {
         .enumerate()
         .filter_map(|(i, port)| {
             midi_out.port_name(port).ok().map(|name| {
-                let is_flow8 = name.to_uppercase().contains(&FLOW_DEVICE_KEYWORD.to_uppercase());
-                log!("  [{}] \"{}\" {}", i, name, if is_flow8 { "<-- FLOW 8" } else { "" });
+                let is_flow8 = name
+                    .to_uppercase()
+                    .contains(&FLOW_DEVICE_KEYWORD.to_uppercase());
+                log!(
+                    "  [{}] \"{}\" {}",
+                    i,
+                    name,
+                    if is_flow8 { "<-- FLOW 8" } else { "" }
+                );
                 MidiDeviceInfo {
                     index: i,
                     name,
@@ -77,8 +83,15 @@ pub fn list_midi_input_devices() -> Vec<MidiDeviceInfo> {
         .enumerate()
         .filter_map(|(i, port)| {
             midi_in.port_name(port).ok().map(|name| {
-                let is_flow8 = name.to_uppercase().contains(&FLOW_DEVICE_KEYWORD.to_uppercase());
-                log!("  [{}] \"{}\" {}", i, name, if is_flow8 { "<-- FLOW 8" } else { "" });
+                let is_flow8 = name
+                    .to_uppercase()
+                    .contains(&FLOW_DEVICE_KEYWORD.to_uppercase());
+                log!(
+                    "  [{}] \"{}\" {}",
+                    i,
+                    name,
+                    if is_flow8 { "<-- FLOW 8" } else { "" }
+                );
                 MidiDeviceInfo {
                     index: i,
                     name,
@@ -90,7 +103,10 @@ pub fn list_midi_input_devices() -> Vec<MidiDeviceInfo> {
 }
 
 pub fn connect_to_device(device_index: usize) -> Result<MidiOutputConnection, String> {
-    log!("[MIDI] Connecting to output device index {}...", device_index);
+    log!(
+        "[MIDI] Connecting to output device index {}...",
+        device_index
+    );
     let midi_out =
         MidiOutput::new(FLOW_CLIENT_NAME).map_err(|e| format!("MIDI output error: {}", e))?;
 
@@ -111,7 +127,10 @@ pub fn connect_input_device(
     device_index: usize,
     sysex_tx: mpsc::Sender<Vec<u8>>,
 ) -> Result<MidiInputConnection<()>, String> {
-    log!("[MIDI] Connecting to input device index {}...", device_index);
+    log!(
+        "[MIDI] Connecting to input device index {}...",
+        device_index
+    );
     let midi_in =
         MidiInput::new(FLOW_CLIENT_NAME).map_err(|e| format!("MIDI input error: {}", e))?;
 
@@ -145,12 +164,7 @@ pub fn connect_input_device(
 }
 
 pub fn send_cc(midi_conn: &mut MidiOutputConnection, midi_channel: u8, cc: u8, value: u8) {
-    log_debug!(
-        "[MIDI] CC#{} val={} ch#{}",
-        cc,
-        value,
-        midi_channel + 1
-    );
+    log_debug!("[MIDI] CC#{} val={} ch#{}", cc, value, midi_channel + 1);
     midi_conn
         .send(&[CONTROL_CHANGE_PREFIX | midi_channel, cc, value])
         .unwrap_or_else(|e| {
@@ -164,7 +178,12 @@ pub fn send_cc(midi_conn: &mut MidiOutputConnection, midi_channel: u8, cc: u8, v
         });
 }
 
-pub fn send_note_on(midi_conn: &mut MidiOutputConnection, midi_channel: u8, note: u8, velocity: u8) {
+pub fn send_note_on(
+    midi_conn: &mut MidiOutputConnection,
+    midi_channel: u8,
+    note: u8,
+    velocity: u8,
+) {
     log_debug!(
         "[MIDI] NoteOn note={} vel={} ch#{}",
         note,
@@ -185,11 +204,7 @@ pub fn send_note_on(midi_conn: &mut MidiOutputConnection, midi_channel: u8, note
 }
 
 pub fn send_program_change(midi_conn: &mut MidiOutputConnection, midi_channel: u8, program: u8) {
-    log_debug!(
-        "[MIDI] PC={} ch#{}",
-        program,
-        midi_channel + 1
-    );
+    log_debug!("[MIDI] PC={} ch#{}", program, midi_channel + 1);
     midi_conn
         .send(&[PROGRAM_CHANGE_PREFIX | midi_channel, program])
         .unwrap_or_else(|e| {

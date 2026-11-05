@@ -68,6 +68,8 @@ pub struct Channel {
     pub channel_strip: BasicChannelStrip,
     pub four_band_eq: FourBandEQ,
     pub sends: ChannelSends,
+    pub connected_l: bool,
+    pub connected_r: bool,
 }
 
 impl Default for Channel {
@@ -91,6 +93,8 @@ impl Default for Channel {
             channel_strip: BasicChannelStrip::default(),
             four_band_eq: FourBandEQ::default(),
             sends: ChannelSends::default(),
+            connected_l: false,
+            connected_r: false,
         }
     }
 }
@@ -147,7 +151,10 @@ impl Channel {
     }
 
     pub fn has_phantom(&self) -> bool {
-        matches!(self.phantom_pwr.phantom_power_type, PhantomPowerType::Set48v)
+        matches!(
+            self.phantom_pwr.phantom_power_type,
+            PhantomPowerType::Set48v
+        )
     }
 
     pub fn is_all_synced(&self) -> bool {
@@ -451,41 +458,201 @@ pub struct FxPresetInfo {
 }
 
 pub const FX1_PRESETS: [FxPresetInfo; 16] = [
-    FxPresetInfo { name: "Ambience",  param1_label: "Decay",     param2_off: "Instrument", param2_on: "Vocal" },
-    FxPresetInfo { name: "Perc-Rev1", param1_label: "Decay",     param2_off: "Dull",       param2_on: "Bright" },
-    FxPresetInfo { name: "Perc-Rev2", param1_label: "Decay",     param2_off: "Dull",       param2_on: "Bright" },
-    FxPresetInfo { name: "Guit-Rev1", param1_label: "Decay",     param2_off: "Less Bass",  param2_on: "More Bass" },
-    FxPresetInfo { name: "Guit-Rev2", param1_label: "Decay",     param2_off: "Less Bass",  param2_on: "More Bass" },
-    FxPresetInfo { name: "Chamber",   param1_label: "Decay",     param2_off: "Pre-D Off",  param2_on: "Pre-D On" },
-    FxPresetInfo { name: "Room",      param1_label: "Decay",     param2_off: "Instrument", param2_on: "Vocal" },
-    FxPresetInfo { name: "Concert",   param1_label: "Decay",     param2_off: "Instrument", param2_on: "Vocal" },
-    FxPresetInfo { name: "Church",    param1_label: "Decay",     param2_off: "Instrument", param2_on: "Vocal" },
-    FxPresetInfo { name: "Cathedral", param1_label: "Decay",     param2_off: "Small",      param2_on: "Large" },
-    FxPresetInfo { name: "Temple",    param1_label: "Decay",     param2_off: "Pre-D Off",  param2_on: "Pre-D On" },
-    FxPresetInfo { name: "Stadium",   param1_label: "Decay",     param2_off: "Pre-D Off",  param2_on: "Pre-D On" },
-    FxPresetInfo { name: "Flanger",   param1_label: "Mod Speed", param2_off: "Mono",       param2_on: "Stereo" },
-    FxPresetInfo { name: "Soft Chor", param1_label: "Density",   param2_off: "Trem Off",   param2_on: "Trem On" },
-    FxPresetInfo { name: "Warm Chor", param1_label: "Density",   param2_off: "Trem Off",   param2_on: "Trem On" },
-    FxPresetInfo { name: "Deep Chor", param1_label: "Density",   param2_off: "Trem Off",   param2_on: "Trem On" },
+    FxPresetInfo {
+        name: "Ambience",
+        param1_label: "Decay",
+        param2_off: "Instrument",
+        param2_on: "Vocal",
+    },
+    FxPresetInfo {
+        name: "Perc-Rev1",
+        param1_label: "Decay",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Perc-Rev2",
+        param1_label: "Decay",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Guit-Rev1",
+        param1_label: "Decay",
+        param2_off: "Less Bass",
+        param2_on: "More Bass",
+    },
+    FxPresetInfo {
+        name: "Guit-Rev2",
+        param1_label: "Decay",
+        param2_off: "Less Bass",
+        param2_on: "More Bass",
+    },
+    FxPresetInfo {
+        name: "Chamber",
+        param1_label: "Decay",
+        param2_off: "Pre-D Off",
+        param2_on: "Pre-D On",
+    },
+    FxPresetInfo {
+        name: "Room",
+        param1_label: "Decay",
+        param2_off: "Instrument",
+        param2_on: "Vocal",
+    },
+    FxPresetInfo {
+        name: "Concert",
+        param1_label: "Decay",
+        param2_off: "Instrument",
+        param2_on: "Vocal",
+    },
+    FxPresetInfo {
+        name: "Church",
+        param1_label: "Decay",
+        param2_off: "Instrument",
+        param2_on: "Vocal",
+    },
+    FxPresetInfo {
+        name: "Cathedral",
+        param1_label: "Decay",
+        param2_off: "Small",
+        param2_on: "Large",
+    },
+    FxPresetInfo {
+        name: "Temple",
+        param1_label: "Decay",
+        param2_off: "Pre-D Off",
+        param2_on: "Pre-D On",
+    },
+    FxPresetInfo {
+        name: "Stadium",
+        param1_label: "Decay",
+        param2_off: "Pre-D Off",
+        param2_on: "Pre-D On",
+    },
+    FxPresetInfo {
+        name: "Flanger",
+        param1_label: "Mod Speed",
+        param2_off: "Mono",
+        param2_on: "Stereo",
+    },
+    FxPresetInfo {
+        name: "Soft Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
+    FxPresetInfo {
+        name: "Warm Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
+    FxPresetInfo {
+        name: "Deep Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
 ];
 
 pub const FX2_PRESETS: [FxPresetInfo; 16] = [
-    FxPresetInfo { name: "Delay 1/1",   param1_label: "Feedback", param2_off: "Dull",     param2_on: "Bright" },
-    FxPresetInfo { name: "Delay 1/2",   param1_label: "Feedback", param2_off: "Dull",     param2_on: "Bright" },
-    FxPresetInfo { name: "Delay 1/3",   param1_label: "Feedback", param2_off: "Dull",     param2_on: "Bright" },
-    FxPresetInfo { name: "Delay 2/1",   param1_label: "Feedback", param2_off: "Dull",     param2_on: "Bright" },
-    FxPresetInfo { name: "Echo 1/1",    param1_label: "Feedback", param2_off: "Soft",     param2_on: "Strong" },
-    FxPresetInfo { name: "Echo 1/2",    param1_label: "Feedback", param2_off: "Soft",     param2_on: "Strong" },
-    FxPresetInfo { name: "Echo 1/3",    param1_label: "Feedback", param2_off: "Soft",     param2_on: "Strong" },
-    FxPresetInfo { name: "Echo 2/1",    param1_label: "Feedback", param2_off: "Soft",     param2_on: "Strong" },
-    FxPresetInfo { name: "Wide Echo",   param1_label: "Feedback", param2_off: "Wide",     param2_on: "Narrow" },
-    FxPresetInfo { name: "Ping Pong",   param1_label: "Feedback", param2_off: "Wide",     param2_on: "Narrow" },
-    FxPresetInfo { name: "Ping P 1/3",  param1_label: "Feedback", param2_off: "Wide",     param2_on: "Narrow" },
-    FxPresetInfo { name: "Ping P R>L",  param1_label: "Feedback", param2_off: "Wide",     param2_on: "Narrow" },
-    FxPresetInfo { name: "Flanger",     param1_label: "Mod Speed", param2_off: "Mono",    param2_on: "Stereo" },
-    FxPresetInfo { name: "Soft Chor",   param1_label: "Density",  param2_off: "Trem Off", param2_on: "Trem On" },
-    FxPresetInfo { name: "Warm Chor",   param1_label: "Density",  param2_off: "Trem Off", param2_on: "Trem On" },
-    FxPresetInfo { name: "Deep Chor",   param1_label: "Density",  param2_off: "Trem Off", param2_on: "Trem On" },
+    FxPresetInfo {
+        name: "Delay 1/1",
+        param1_label: "Feedback",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Delay 1/2",
+        param1_label: "Feedback",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Delay 1/3",
+        param1_label: "Feedback",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Delay 2/1",
+        param1_label: "Feedback",
+        param2_off: "Dull",
+        param2_on: "Bright",
+    },
+    FxPresetInfo {
+        name: "Echo 1/1",
+        param1_label: "Feedback",
+        param2_off: "Soft",
+        param2_on: "Strong",
+    },
+    FxPresetInfo {
+        name: "Echo 1/2",
+        param1_label: "Feedback",
+        param2_off: "Soft",
+        param2_on: "Strong",
+    },
+    FxPresetInfo {
+        name: "Echo 1/3",
+        param1_label: "Feedback",
+        param2_off: "Soft",
+        param2_on: "Strong",
+    },
+    FxPresetInfo {
+        name: "Echo 2/1",
+        param1_label: "Feedback",
+        param2_off: "Soft",
+        param2_on: "Strong",
+    },
+    FxPresetInfo {
+        name: "Wide Echo",
+        param1_label: "Feedback",
+        param2_off: "Wide",
+        param2_on: "Narrow",
+    },
+    FxPresetInfo {
+        name: "Ping Pong",
+        param1_label: "Feedback",
+        param2_off: "Wide",
+        param2_on: "Narrow",
+    },
+    FxPresetInfo {
+        name: "Ping P 1/3",
+        param1_label: "Feedback",
+        param2_off: "Wide",
+        param2_on: "Narrow",
+    },
+    FxPresetInfo {
+        name: "Ping P R>L",
+        param1_label: "Feedback",
+        param2_off: "Wide",
+        param2_on: "Narrow",
+    },
+    FxPresetInfo {
+        name: "Flanger",
+        param1_label: "Mod Speed",
+        param2_off: "Mono",
+        param2_on: "Stereo",
+    },
+    FxPresetInfo {
+        name: "Soft Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
+    FxPresetInfo {
+        name: "Warm Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
+    FxPresetInfo {
+        name: "Deep Chor",
+        param1_label: "Density",
+        param2_off: "Trem Off",
+        param2_on: "Trem On",
+    },
 ];
 
 #[derive(Copy, Clone, Debug)]
@@ -513,13 +680,21 @@ impl FxSlot {
     }
 
     pub fn preset_info(&self) -> &'static FxPresetInfo {
-        let presets = if self.id == 0 { &FX1_PRESETS } else { &FX2_PRESETS };
+        let presets = if self.id == 0 {
+            &FX1_PRESETS
+        } else {
+            &FX2_PRESETS
+        };
         let idx = (self.preset as usize).min(presets.len() - 1);
         &presets[idx]
     }
 
     pub fn presets(&self) -> &'static [FxPresetInfo; 16] {
-        if self.id == 0 { &FX1_PRESETS } else { &FX2_PRESETS }
+        if self.id == 0 {
+            &FX1_PRESETS
+        } else {
+            &FX2_PRESETS
+        }
     }
 
     pub fn param2_is_on(&self) -> bool {

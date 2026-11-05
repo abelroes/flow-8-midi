@@ -17,15 +17,31 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            windows_ble: false
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            windows_ble: true
           - os: macos-latest
             target: aarch64-apple-darwin
+            windows_ble: false
 
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: flow-8-midi
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: flow-8-midi
+
+      - name: Checkout DirectHCI
+        if: matrix.windows_ble
+        uses: actions/checkout@v4
+        with:
+          repository: NanamiKite/DirectHCI
+          ref: d7f5049b7e969396e825f336662c7dae73c96e29
+          path: DirectHCI
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -35,6 +51,9 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
+          workspaces: |
+            flow-8-midi -> target
+            DirectHCI -> flow-8-midi/target
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -42,8 +61,31 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libasound2-dev pkg-config libxkbcommon-dev libwayland-dev libdbus-1-dev
 
+      - name: Format
+        run: cargo fmt --check
+
       - name: Check
         run: cargo check --release --target ${{ matrix.target }}
 
       - name: Clippy
         run: cargo clippy --release --target ${{ matrix.target }} -- -D warnings
+
+      - name: Test
+        run: cargo test --target ${{ matrix.target }}
+
+      # Shared target dir — same layout as release.yml (no cross-crate copies).
+      - name: Check Windows BLE stack
+        if: matrix.windows_ble
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/flow-8-midi/target
+        shell: pwsh
+        run: |
+          $t = "${{ matrix.target }}"
+          cargo check --release --target $t --bin flow-8-midi
+          Push-Location helper/flow8-ble-helper
+          cargo check --release --target $t
+          Pop-Location
+          Push-Location ../DirectHCI
+          cargo check --release --target $t `
+            -p directhci -p directhcid -p directhci-control-panel -p directhci-ble-cli
+          Pop-Location

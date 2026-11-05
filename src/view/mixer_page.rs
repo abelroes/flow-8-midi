@@ -1,339 +1,242 @@
 use crate::model::{
-    channels::{Bus, BusType, Channel, PhantomPowerType},
+    channels::{Bus, BusType, Channel},
     flow8::FLOW8Controller,
     message::InterfaceMessage,
 };
+use crate::service::mixer_state::{BLE_FX1, BLE_FX2, BLE_MON1, BLE_MON2};
+use crate::view::theme::{
+    self, BUS_STRIP_WIDTH, FADER_HEIGHT, MON_LINK, PRIMARY, SECONDARY, STRIP_WIDTH, TERTIARY,
+};
 use crate::view::widgets::{
-    h_slider, sync_dot, sync_label, v_slider,
-    format_gain, format_level, format_pan, format_comp, format_lowcut, format_limiter,
+    bus_selector_row, dual_meter, format_level, format_send, v_slider, BUS_MIX,
 };
 use iced::{
-    widget::{
-        button, column, container, row, text, tooltip, tooltip::Position,
-        Column, Space,
-    },
+    widget::{button, column, container, row, text, Column, Space},
     Center, Element, Fill, Length,
 };
 
-const FADER_HEIGHT: f32 = 280.0;
-const BUS_FADER_HEIGHT: f32 = 320.0;
-
 pub fn view_mixer(controller: &FLOW8Controller) -> Element<'_, InterfaceMessage> {
+    let bus_bar = container(bus_selector_row(controller.selected_bus))
+        .width(Fill)
+        .padding([8, 12]);
+
     let channels_row: Vec<Element<InterfaceMessage>> = controller
         .channels
         .iter()
-        .map(|c| build_channel_strip(c))
+        .map(|c| build_channel_strip(controller, c))
         .collect();
 
-    let channels_section = container(
-        iced::widget::Row::with_children(channels_row)
-            .spacing(3)
-            .width(Fill),
-    )
-    .width(Length::FillPortion(7));
+    let channels_section = iced::widget::Row::with_children(channels_row)
+        .spacing(8)
+        .width(Length::Shrink);
 
     let bus_strips: Vec<Element<InterfaceMessage>> = controller
         .buses
         .iter()
         .filter(|b| b.bus_type != BusType::Fx)
-        .map(|b| build_bus_strip(b))
+        .map(|b| build_bus_strip(controller, b))
         .collect();
 
-    let buses_section = container(
-        iced::widget::Row::with_children(bus_strips)
-            .spacing(3)
-            .width(Fill),
-    )
-    .width(Length::FillPortion(3));
+    let buses_section = iced::widget::Row::with_children(bus_strips)
+        .spacing(8)
+        .width(Length::Shrink);
 
-    row![channels_section, Space::new().width(6), buses_section]
+    container(
+        column![
+            bus_bar,
+            row![
+                channels_section,
+                Space::new().width(16),
+                buses_section,
+            ]
+            .padding([0, 12])
+            .width(Fill),
+        ]
         .width(Fill)
-        .height(Fill)
-        .padding([0, 10])
-        .into()
+        .height(Fill),
+    )
+    .width(Fill)
+    .height(Fill)
+    .style(theme::app_box)
+    .into()
 }
 
-const NAME_SLOT_HEIGHT: f32 = 16.0;
-const PHANTOM_SLOT_HEIGHT: f32 = 30.0;
-const H_SLIDER_SLOT_HEIGHT: f32 = 38.0;
+fn layer_label(selected: u8) -> &'static str {
+    match selected {
+        BLE_MON1 => "Mon1",
+        BLE_MON2 => "Mon2",
+        BLE_FX1 => "FX1",
+        BLE_FX2 => "FX2",
+        BUS_MIX => "Mix",
+        _ => "Main",
+    }
+}
 
-fn build_channel_strip(channel: &Channel) -> Element<'_, InterfaceMessage> {
-    let mut col = Column::new()
-        .width(Fill)
-        .align_x(Center)
-        .spacing(6)
-        .padding([10, 6]);
-
-    col = col.push(text(channel.display_label()).size(13));
-
-    let name_content: Element<'_, InterfaceMessage> = if !channel.name.is_empty() {
-        text(&channel.name).size(11).into()
-    } else {
-        Space::new().into()
-    };
-    col = col.push(
-        container(name_content)
-            .height(Length::Fixed(NAME_SLOT_HEIGHT))
-            .align_y(Center),
-    );
-
-    col = add_mute_solo(col, channel);
-
-    col = col.push(build_phantom_slot(channel));
-
-    let strip = &channel.channel_strip;
+fn build_channel_strip<'a>(
+    controller: &'a FLOW8Controller,
+    channel: &'a Channel,
+) -> Element<'a, InterfaceMessage> {
     let ch_id = channel.id;
+    let idx = channel.id as usize;
+    let left = controller.meter.stereo_left(idx);
+    let right = controller.meter.stereo_right(idx);
+    let bus = controller.selected_bus;
 
-    col = col.push(build_h_slider_slot(
-        channel.has_gain(),
-        "Gain",
-        strip.gain_synced,
-        0..=127,
-        strip.gain,
-        format_gain(strip.gain),
-        move |v| InterfaceMessage::Gain(ch_id, v),
-    ));
+    let id_color = PRIMARY;
+    let _ = MON_LINK;
+
+    let mut col = Column::new()
+        .width(Length::Fixed(STRIP_WIDTH))
+        .align_x(Center)
+        .spacing(0)
+        .padding([8, 4]);
 
     col = col.push(
-        column![
-            sync_label("Level", 12.0, strip.level_synced),
-            v_slider(1..=127, strip.level, FADER_HEIGHT, move |v| {
-                InterfaceMessage::Level(ch_id, v)
-            }, format_level(strip.level)),
-        ]
-        .align_x(Center)
-        .spacing(4),
+        text(channel.display_label())
+            .size(11)
+            .color(id_color)
+            .center(),
     );
+    col = col.push(Space::new().height(4));
+    col = col.push(
+        text(if channel.name.is_empty() {
+            "—"
+        } else {
+            channel.name.as_str()
+        })
+        .size(10)
+        .color(SECONDARY)
+        .center(),
+    );
+    col = col.push(Space::new().height(10));
 
-    col = col.push(build_h_slider_slot(
-        true,
-        "Bal",
-        strip.balance_synced,
-        0..=127,
-        strip.balance,
-        format_pan(strip.balance),
-        move |v| InterfaceMessage::Balance(ch_id, v),
+    col = col.push(dual_meter(
+        left.level_normalized(),
+        right.map(|r| r.level_normalized()),
     ));
+    col = col.push(Space::new().height(10));
 
-    col = col.push(build_h_slider_slot(
-        channel.has_compressor(),
-        "Comp",
-        strip.compressor_synced,
-        0..=100,
-        strip.compressor,
-        format_comp(strip.compressor),
-        move |v| InterfaceMessage::Compressor(ch_id, v),
-    ));
+    let mute = button(text("M").size(12).center())
+        .width(Length::Fixed(40.0))
+        .height(Length::Fixed(26.0))
+        .on_press(InterfaceMessage::Mute(ch_id, channel.is_muted))
+        .style(if channel.is_muted {
+            theme::btn(theme::BtnKind::Danger)
+        } else {
+            theme::btn(theme::BtnKind::Secondary)
+        });
+    let solo = button(text("S").size(12).center())
+        .width(Length::Fixed(40.0))
+        .height(Length::Fixed(26.0))
+        .on_press(InterfaceMessage::Solo(ch_id, channel.is_soloed))
+        .style(if channel.is_soloed {
+            theme::btn(theme::BtnKind::Success)
+        } else {
+            theme::btn(theme::BtnKind::Secondary)
+        });
+    col = col.push(row![mute, Space::new().width(8), solo].align_y(Center));
+    col = col.push(Space::new().height(8));
+    col = col.push(text(layer_label(bus)).size(10).color(SECONDARY));
+    col = col.push(Space::new().height(8));
 
-    col = col.push(build_h_slider_slot(
-        channel.has_low_cut(),
-        "Low Cut",
-        strip.low_cut_synced,
-        0..=127,
-        strip.low_cut,
-        format_lowcut(strip.low_cut),
-        move |v| InterfaceMessage::LowCut(ch_id, v),
-    ));
+    let (fader_value, fader_tip) = match bus {
+        BLE_MON1 => (channel.sends.mon1, format_send(channel.sends.mon1)),
+        BLE_MON2 => (channel.sends.mon2, format_send(channel.sends.mon2)),
+        BLE_FX1 => (channel.sends.fx1, format_send(channel.sends.fx1)),
+        BLE_FX2 => (channel.sends.fx2, format_send(channel.sends.fx2)),
+        _ => (
+            channel.channel_strip.level,
+            format_level(channel.channel_strip.level),
+        ),
+    };
+
+    let fader: Element<'_, InterfaceMessage> = match bus {
+        BLE_MON1 => v_slider(1..=127, fader_value, FADER_HEIGHT, move |v| {
+            InterfaceMessage::SendMon1(ch_id, v)
+        }, fader_tip),
+        BLE_MON2 => v_slider(1..=127, fader_value, FADER_HEIGHT, move |v| {
+            InterfaceMessage::SendMon2(ch_id, v)
+        }, fader_tip),
+        BLE_FX1 => v_slider(1..=127, fader_value, FADER_HEIGHT, move |v| {
+            InterfaceMessage::SendFx1(ch_id, v)
+        }, fader_tip),
+        BLE_FX2 => v_slider(1..=127, fader_value, FADER_HEIGHT, move |v| {
+            InterfaceMessage::SendFx2(ch_id, v)
+        }, fader_tip),
+        _ => v_slider(1..=127, fader_value, FADER_HEIGHT, move |v| {
+            InterfaceMessage::Level(ch_id, v)
+        }, fader_tip.clone()),
+    };
+
+    col = col.push(fader);
+    col = col.push(Space::new().height(12));
+    col = col.push(text(format_level(fader_value)).size(12).color(PRIMARY));
+    col = col.push(Space::new().height(10));
+    col = col.push(
+        button(text("Edit").size(12).center())
+            .width(Length::Fixed(80.0))
+            .height(Length::Fixed(30.0))
+            .on_press(InterfaceMessage::EditChannel(ch_id))
+            .style(theme::btn(theme::BtnKind::Secondary)),
+    );
 
     container(col)
-        .style(container::rounded_box)
-        .width(Fill)
-        .padding(2)
+        .style(theme::surface_box)
+        .width(Length::Fixed(STRIP_WIDTH))
         .into()
 }
 
-fn build_h_slider_slot<'a, F>(
-    enabled: bool,
-    label: &'a str,
-    is_synced: bool,
-    range: std::ops::RangeInclusive<u8>,
-    value: u8,
-    tip: String,
-    on_change: F,
-) -> Element<'a, InterfaceMessage>
-where
-    F: Fn(u8) -> InterfaceMessage + 'a,
-{
-    let content: Element<'a, InterfaceMessage> = if enabled {
-        column![
-            sync_label(label, 12.0, is_synced),
-            h_slider(range, value, on_change, tip),
-        ]
-        .align_x(Center)
-        .spacing(2)
-        .width(Fill)
-        .padding([0, 6])
-        .into()
-    } else {
-        Space::new().into()
-    };
-    container(content)
-        .height(Length::Fixed(H_SLIDER_SLOT_HEIGHT))
-        .width(Fill)
-        .align_y(Center)
-        .into()
-}
-
-fn build_phantom_slot(channel: &Channel) -> Element<'_, InterfaceMessage> {
-    let content: Element<'_, InterfaceMessage> = if let PhantomPowerType::Set48v =
-        channel.phantom_pwr.phantom_power_type
-    {
-        let awaiting_confirm = channel
-            .phantom_last_click
-            .map(|t| t.elapsed().as_millis() < 500)
-            .unwrap_or(false);
-
-        let base = button(if awaiting_confirm {
-            text("\u{26A0} 48V \u{26A0}").size(11)
-        } else if channel.phantom_pwr.is_on {
-            text("48V ON").size(11)
-        } else {
-            text("48V").size(11)
-        })
-        .on_press(InterfaceMessage::PhantomPower(channel.id))
-        .padding([3, 10]);
-
-        let btn = if awaiting_confirm {
-            base.style(button::primary)
-        } else if channel.phantom_pwr.is_on {
-            base.style(button::danger)
-        } else {
-            base.style(button::secondary)
-        };
-
-        let tip_text = if awaiting_confirm {
-            "\u{26A0} CLICK AGAIN to confirm!\nPhantom Power can damage unbalanced microphones."
-        } else {
-            "\u{26A0} Double-click to toggle Phantom Power (+48V)\nWARNING: May damage unbalanced mics!"
-        };
-
-        let tip = tooltip(
-            btn,
-            container(text(tip_text).size(12))
-                .padding(8)
-                .style(container::rounded_box),
-            Position::FollowCursor,
-        )
-        .gap(5);
-
-        row![sync_dot(channel.phantom_synced), tip]
-            .align_y(Center)
-            .spacing(2)
-            .into()
-    } else {
-        button(text(" ").size(11))
-            .padding([3, 10])
-            .style(button::text)
-            .into()
-    };
-    container(content)
-        .height(Length::Fixed(PHANTOM_SLOT_HEIGHT))
-        .align_y(Center)
-        .into()
-}
-
-fn add_mute_solo<'a>(
-    column: Column<'a, InterfaceMessage>,
-    channel: &'a Channel,
-) -> Column<'a, InterfaceMessage> {
-    let mute_btn = {
-        let btn = button(text("M").size(12))
-            .on_press(InterfaceMessage::Mute(channel.id, channel.is_muted))
-            .padding([4, 10]);
-        if channel.is_muted {
-            btn.style(button::danger)
-        } else {
-            btn.style(button::secondary)
-        }
-    };
-
-    let solo_btn = {
-        let btn = button(text("S").size(12))
-            .on_press(InterfaceMessage::Solo(channel.id, channel.is_soloed))
-            .padding([4, 10]);
-        if channel.is_soloed {
-            btn.style(button::success)
-        } else {
-            btn.style(button::secondary)
-        }
-    };
-
-    column.push(
-        row![
-            sync_dot(channel.mute_synced),
-            mute_btn,
-            sync_dot(channel.solo_synced),
-            solo_btn,
-        ]
-        .align_y(Center)
-        .spacing(2),
-    )
-}
-
-fn build_bus_strip(bus: &Bus) -> Element<'_, InterfaceMessage> {
-    let mut col = Column::new()
-        .width(Fill)
-        .align_x(Center)
-        .spacing(6)
-        .padding([10, 6]);
-
+fn build_bus_strip<'a>(
+    _controller: &'a FLOW8Controller,
+    bus: &'a Bus,
+) -> Element<'a, InterfaceMessage> {
     let bus_idx = bus.index;
     let bus_id = bus.id;
 
-    col = col.push(text(bus.label()).size(14));
-
-    col = col.push(
-        column![
-            sync_label("Level", 12.0, bus.bus_strip.level_synced),
-            v_slider(1..=127, bus.bus_strip.level, BUS_FADER_HEIGHT, move |v| {
-                InterfaceMessage::BusLevel(bus_idx, bus_id, v)
-            }, format_level(bus.bus_strip.level)),
-        ]
+    let mut col = Column::new()
+        .width(Length::Fixed(BUS_STRIP_WIDTH))
         .align_x(Center)
-        .spacing(4),
-    );
+        .spacing(0)
+        .padding([8, 8]);
 
-    let has_bal = bus.has_balance();
-    let bal_content: Element<'_, InterfaceMessage> = if has_bal {
-        column![
-            sync_label("Bal", 12.0, bus.bus_strip.balance_synced),
-            h_slider(0..=127, bus.bus_strip.balance, move |v| {
-                InterfaceMessage::BusBalance(bus_idx, bus_id, v)
-            }, format_pan(bus.bus_strip.balance)),
-        ]
-        .align_x(Center)
-        .spacing(2)
-        .width(Fill)
-        .padding([0, 6])
-        .into()
-    } else {
-        Space::new().into()
-    };
+    col = col.push(text(bus.label()).size(14).color(PRIMARY));
+    col = col.push(Space::new().height(8));
+    col = col.push(text("—").size(10).color(TERTIARY));
+    col = col.push(Space::new().height(16));
+
+    let mute = button(text("M").size(12).center())
+        .width(Length::Fixed(40.0))
+        .height(Length::Fixed(26.0))
+        .style(theme::btn(theme::BtnKind::Secondary));
+    col = col.push(mute);
+    col = col.push(Space::new().height(16));
+    col = col.push(text("Level").size(11).color(SECONDARY));
+    col = col.push(Space::new().height(8));
+
+    col = col.push(v_slider(
+        1..=127,
+        bus.bus_strip.level,
+        FADER_HEIGHT,
+        move |v| InterfaceMessage::BusLevel(bus_idx, bus_id, v),
+        format_level(bus.bus_strip.level),
+    ));
+    col = col.push(Space::new().height(12));
     col = col.push(
-        container(bal_content)
-            .height(Length::Fixed(H_SLIDER_SLOT_HEIGHT))
-            .width(Fill)
-            .align_y(Center),
+        text(format_level(bus.bus_strip.level))
+            .size(12)
+            .color(PRIMARY),
     );
-
-    if bus.has_limiter() {
-        col = col.push(
-            column![
-                sync_label("Limiter", 12.0, bus.bus_strip.limiter_synced),
-                h_slider(0..=127, bus.bus_strip.limiter, move |v| {
-                    InterfaceMessage::BusLimiter(bus_idx, bus_id, v)
-                }, format_limiter(bus.bus_strip.limiter)),
-            ]
-            .align_x(Center)
-            .spacing(2)
-            .width(Fill)
-            .padding([0, 6]),
-        );
-    }
+    col = col.push(Space::new().height(10));
+    col = col.push(
+        button(text("Edit").size(12).center())
+            .width(Length::Fixed(80.0))
+            .height(Length::Fixed(30.0))
+            .on_press(InterfaceMessage::EditBus(bus_idx))
+            .style(theme::btn(theme::BtnKind::Secondary)),
+    );
 
     container(col)
-        .style(container::rounded_box)
-        .width(Fill)
-        .padding(2)
+        .style(theme::bus_strip_box)
+        .width(Length::Fixed(BUS_STRIP_WIDTH))
         .into()
 }

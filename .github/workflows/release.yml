@@ -1,5 +1,12 @@
 name: Release
 
+# One end-user package per OS:
+#   Windows → FLOW8-MIDI-Setup-<ver>.exe  (scripts/windows/build-installer.ps1)
+#   Linux   → FLOW8-MIDI-<ver>-x86_64.AppImage
+#   macOS   → flow-8-midi-macos-aarch64.tar.gz
+#
+# Windows Setup requires secret LIBWDI_DLL_URL (LGPL libwdi.dll). Job fails without it.
+
 on:
   push:
     tags:
@@ -7,7 +14,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  BINARY_NAME: flow-8-midi
 
 permissions:
   contents: write
@@ -20,21 +26,34 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
-            artifact: flow-8-midi
-            archive: flow-8-midi-linux-x86_64.tar.gz
+            kind: appimage
+            windows_ble: false
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            artifact: flow-8-midi.exe
-            archive: flow-8-midi-windows-x86_64.zip
+            kind: windows-setup
+            windows_ble: true
           - os: macos-latest
             target: aarch64-apple-darwin
-            artifact: flow-8-midi
-            archive: flow-8-midi-macos-aarch64.tar.gz
+            kind: macos-tar
+            windows_ble: false
 
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: flow-8-midi
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          path: flow-8-midi
+
+      - name: Checkout DirectHCI
+        if: matrix.windows_ble
+        uses: actions/checkout@v4
+        with:
+          repository: NanamiKite/DirectHCI
+          ref: d7f5049b7e969396e825f336662c7dae73c96e29
+          path: DirectHCI
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -43,30 +62,70 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: ${{ matrix.target }}
+          workspaces: |
+            flow-8-midi -> target
+            DirectHCI -> flow-8-midi/target
 
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
+        if: matrix.kind == 'appimage'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev pkg-config libxkbcommon-dev libwayland-dev libdbus-1-dev
+          sudo apt-get install -y \
+            libasound2-dev pkg-config libxkbcommon-dev libwayland-dev \
+            libdbus-1-dev imagemagick fuse libfuse2
 
-      - name: Build
-        run: cargo build --release --target ${{ matrix.target }} --bin flow-8-midi
-
-      - name: Package (tar.gz)
-        if: runner.os != 'Windows'
-        run: tar czf ${{ matrix.archive }} -C target/${{ matrix.target }}/release ${{ matrix.artifact }}
-
-      - name: Package (zip)
-        if: runner.os == 'Windows'
+      - name: Install Inno Setup
+        if: matrix.kind == 'windows-setup'
         shell: pwsh
-        run: Compress-Archive -Path target/${{ matrix.target }}/release/${{ matrix.artifact }} -DestinationPath ${{ matrix.archive }}
+        run: choco install innosetup -y --no-progress
 
-      - name: Upload artifact
+      - name: Build Windows Setup
+        if: matrix.kind == 'windows-setup'
+        env:
+          CARGO_TARGET_DIR: ${{ github.workspace }}/flow-8-midi/target
+          LIBWDI_DLL_URL: ${{ secrets.LIBWDI_DLL_URL }}
+        shell: pwsh
+        run: |
+          if (-not $env:LIBWDI_DLL_URL) {
+            throw 'Missing repository secret LIBWDI_DLL_URL (URL to libwdi.dll for the Setup package).'
+          }
+          .\scripts\windows\build-installer.ps1 `
+            -Profile release `
+            -Target ${{ matrix.target }}
+          Copy-Item -Force dist\windows\release\FLOW8-MIDI-Setup-*.exe ..
+
+      - name: Build AppImage
+        if: matrix.kind == 'appimage'
+        run: |
+          scripts/linux/build-appimage.sh
+          cp dist/linux/FLOW8-MIDI-*-x86_64.AppImage ..
+
+      - name: Build macOS app
+        if: matrix.kind == 'macos-tar'
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin flow-8-midi
+          tar czf ../flow-8-midi-macos-aarch64.tar.gz -C target/${{ matrix.target }}/release flow-8-midi
+
+      - name: Upload AppImage
+        if: matrix.kind == 'appimage'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.archive }}
-          path: ${{ matrix.archive }}
+          name: release-appimage
+          path: FLOW8-MIDI-*-x86_64.AppImage
+
+      - name: Upload Windows Setup
+        if: matrix.kind == 'windows-setup'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-setup
+          path: FLOW8-MIDI-Setup-*.exe
+
+      - name: Upload macOS
+        if: matrix.kind == 'macos-tar'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-macos
+          path: flow-8-midi-macos-aarch64.tar.gz
 
   release:
     needs: build
@@ -82,6 +141,6 @@ jobs:
         with:
           generate_release_notes: true
           files: |
-            flow-8-midi-linux-x86_64.tar.gz
-            flow-8-midi-windows-x86_64.zip
+            FLOW8-MIDI-Setup-*.exe
+            FLOW8-MIDI-*-x86_64.AppImage
             flow-8-midi-macos-aarch64.tar.gz

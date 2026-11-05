@@ -1,6 +1,6 @@
 use std::fmt;
 use std::ops::RangeInclusive;
-use std::sync::{mpsc, Arc, Mutex};
+use std::sync::{mpsc as std_mpsc, Arc, Mutex};
 use std::time::Instant;
 
 use iced::Theme;
@@ -9,10 +9,14 @@ use midir::{MidiInputConnection, MidiOutputConnection};
 use super::channels::{
     AudioConnection, Bus, BusType, Channel, ChannelType, FxSlot, PhantomPower, PhantomPowerType,
 };
+use super::meter::MeterState;
 use super::page::Page;
+use crate::platform::single_instance::SingleInstanceGuard;
+use crate::platform::tray::TrayConfig;
 use crate::service::ble::{BleConnection, BleStatus};
-#[cfg(any(debug_assertions, feature = "dev-tools"))]
-use crate::service::sysex_calibration::CalibrationState;
+use crate::service::ble_protocol::BleCommand;
+use crate::service::ble_session::{SessionControl, SessionState};
+use tokio::sync::mpsc;
 
 pub const SNAPSHOT_COUNT: usize = 15;
 
@@ -75,23 +79,44 @@ pub struct FLOW8Controller {
     pub channels: Vec<Channel>,
     pub buses: Vec<Bus>,
     pub fx_slots: Vec<FxSlot>,
-    pub sysex_receiver: Option<mpsc::Receiver<Vec<u8>>>,
+    pub sysex_receiver: Option<std_mpsc::Receiver<Vec<u8>>>,
     pub last_sysex_dump: Option<Vec<u8>>,
     pub ble_status: BleStatus,
-    pub ble_status_receiver: Option<mpsc::Receiver<BleStatus>>,
+    pub ble_status_receiver: Option<std_mpsc::Receiver<BleStatus>>,
     pub ble_available: bool,
     pub ble_connection: Arc<Mutex<Option<BleConnection>>>,
+    pub ble_cmd_tx: Option<mpsc::Sender<BleCommand>>,
+    pub ble_control_tx: Option<mpsc::Sender<SessionControl>>,
     pub tick_counter: u32,
     pub ble_last_click: Option<Instant>,
     pub sync_last_click: Option<Instant>,
     pub sync_interval: SyncInterval,
     pub last_sync_time: Option<Instant>,
     pub snapshot_names: Vec<Option<String>>,
-    pub snapshot_names_receiver: Option<mpsc::Receiver<Vec<Option<String>>>>,
+    pub snapshot_names_receiver: Option<std_mpsc::Receiver<Vec<Option<String>>>>,
     pub fx_muted: bool,
     pub snapshot_resync_at: Option<Instant>,
-    #[cfg(any(debug_assertions, feature = "dev-tools"))]
-    pub calibration: CalibrationState,
+    pub session_state: SessionState,
+    pub firmware_version: Option<String>,
+    pub protocol_version: Option<u16>,
+    pub meter: MeterState,
+    pub tray_config: TrayConfig,
+    pub _instance_guard: Option<SingleInstanceGuard>,
+    pub selected_bus: u8,
+    pub selected_channel: u8,
+    pub selected_fx: u8,
+    /// When true, Eq page shows bus GEQ for `selected_bus_edit`.
+    pub detail_is_bus: bool,
+    pub selected_bus_edit: u8,
+    pub firmware_notice_dismissed: bool,
+    /// 0=Preferences 1=Routing 2=Snapshots 3=Info
+    pub setup_tab: u8,
+    /// 0=show_db 1=finer_sliders 2=mute_visible 3=eq_full_parametric
+    pub app_prefs: [bool; 4],
+    /// Routing toggles matching Setup → Routing cards (UI state).
+    pub routing_flags: [bool; 15],
+    /// Snapshot scope: Channels / FX / Main·Mon / Routing
+    pub snapshot_scope: [bool; 4],
 }
 
 const CHANNEL_RANGE: RangeInclusive<u8> = 0..=6;
@@ -128,9 +153,13 @@ impl FLOW8Controller {
             && self.fx_slots.iter().all(|f| f.is_all_synced())
     }
 
+    pub fn is_ble_active(&self) -> bool {
+        self.session_state == SessionState::Active && self.ble_cmd_tx.is_some()
+    }
+
     pub fn new() -> FLOW8Controller {
         FLOW8Controller {
-            current_page: Page::DeviceSelect,
+            current_page: Page::Connection,
             theme: Theme::Dark,
             midi_conn: None,
             midi_input_conn: None,
@@ -178,6 +207,8 @@ impl FLOW8Controller {
             ble_status_receiver: None,
             ble_available: false,
             ble_connection: Arc::new(Mutex::new(None)),
+            ble_cmd_tx: None,
+            ble_control_tx: None,
             tick_counter: 0,
             ble_last_click: None,
             sync_last_click: None,
@@ -187,8 +218,26 @@ impl FLOW8Controller {
             snapshot_names_receiver: None,
             fx_muted: false,
             snapshot_resync_at: None,
-            #[cfg(any(debug_assertions, feature = "dev-tools"))]
-            calibration: CalibrationState::new(),
+            session_state: SessionState::Disconnected,
+            firmware_version: None,
+            protocol_version: None,
+            meter: MeterState::default(),
+            tray_config: TrayConfig::default(),
+            _instance_guard: None,
+            selected_bus: 0x01,
+            selected_channel: 0,
+            selected_fx: 0,
+            detail_is_bus: false,
+            selected_bus_edit: 0,
+            firmware_notice_dismissed: false,
+            setup_tab: 0,
+            app_prefs: [true, false, true, false],
+            routing_flags: [
+                true, true, true, true, true, true, // FX returns
+                true, false, false, false, // Phones / Monitor
+                false, false, false, true, false, // USB / Record
+            ],
+            snapshot_scope: [true, true, true, true],
         }
     }
 }

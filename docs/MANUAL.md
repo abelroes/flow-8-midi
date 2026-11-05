@@ -10,9 +10,11 @@ A non-official cross-platform desktop MIDI controller for the [Behringer FLOW 8]
   - [Table of Contents](#table-of-contents)
   - [1. What is FLOW 8 MIDI Controller?](#1-what-is-flow-8-midi-controller)
   - [2. Getting Started](#2-getting-started)
-    - [2.1 Requirements](#21-requirements)
-    - [2.2 Connecting your FLOW 8](#22-connecting-your-flow-8)
-    - [2.3 Device Selection Screen](#23-device-selection-screen)
+    - [2.1 Install](#21-install)
+    - [2.2 Requirements](#22-requirements)
+    - [2.3 Connecting your FLOW 8](#23-connecting-your-flow-8)
+    - [2.4 Windows Bluetooth notes](#24-windows-bluetooth-notes)
+    - [2.5 Device Selection Screen](#25-device-selection-screen)
   - [3. Navigation Bar](#3-navigation-bar)
     - [3.1 Page Tabs](#31-page-tabs)
     - [3.2 Sync Status](#32-sync-status)
@@ -36,8 +38,10 @@ A non-official cross-platform desktop MIDI controller for the [Behringer FLOW 8]
   - [10. Bluetooth (BLE) Sync](#10-bluetooth-ble-sync)
     - [10.1 Why Bluetooth?](#101-why-bluetooth)
     - [10.2 How It Works](#102-how-it-works)
-    - [10.3 Auto-Sync](#103-auto-sync)
-    - [10.4 Manual Sync](#104-manual-sync)
+    - [10.3 Windows (DirectHCI)](#103-windows-directhci)
+    - [10.4 Auto-Sync](#104-auto-sync)
+    - [10.5 Manual Sync](#105-manual-sync)
+    - [10.6 USB MIDI fallback](#106-usb-midi-fallback)
   - [11. FAQ — Troubleshooting](#11-faq--troubleshooting)
   - [12. For Developers](#12-for-developers)
 
@@ -64,23 +68,45 @@ FLOW 8 MIDI Controller is a desktop application that lets you control your Behri
 
 ## 2. Getting Started
 
-### 2.1 Requirements
+### 2.1 Install
 
-* A **Behringer FLOW 8** mixer connected via **USB** to your computer.
-* **(Optional)** A Bluetooth adapter on your computer for BLE sync features (state sync, snapshots).
+**One package per OS** — download only that file from [GitHub Releases](https://github.com/abelroes/flow-8-midi/releases):
+
+| Platform | Package | Install |
+|----------|---------|---------|
+| **Windows** | `FLOW8-MIDI-Setup-*.exe` | Run it (admin). Choose components: FLOW 8 (required) and DirectHCI Bluetooth (optional, on by default). No second installer. |
+| **Linux** | `FLOW8-MIDI-*-x86_64.AppImage` | `chmod +x` that file, then run it. |
+| **macOS** | `flow-8-midi-macos-aarch64.tar.gz` | Extract and run `flow-8-midi`. |
+
+Do **not** install a separate DirectHCI Setup. Uninstall on Windows via **Settings → Apps**. On Linux, delete the AppImage.
+
+### 2.2 Requirements
+
+* A **Behringer FLOW 8** mixer (powered on).
+* **Bluetooth** on the computer for full state sync (recommended), **or** a **USB** cable for MIDI control without sync.
+* On **Windows**, use the **Setup** installer above so DirectHCI is registered (see [§2.4](#24-windows-bluetooth-notes)).
 
 > **Important:** The FLOW 8 only allows **one Bluetooth connection at a time**. If the official Behringer Android/iOS app is connected to the mixer, this application will not be able to establish a Bluetooth connection (and vice-versa). Make sure to disconnect from one before connecting with the other.
 
-### 2.2 Connecting your FLOW 8
+### 2.3 Connecting your FLOW 8
 
-1. Connect the FLOW 8 to your computer via USB.
-2. Power on the mixer.
-3. Launch the application.
-4. The app automatically detects the FLOW 8 and connects to it.
+1. Power on the mixer. Hold **PAIR APP** on the mixer if it is not advertising.
+2. Launch the application.
+3. On the Connection screen, choose **Connect via Bluetooth** (recommended) or **Use USB MIDI instead**.
+4. With Bluetooth: approve the Administrator prompt on Windows if shown, wait for prepare/scan, then complete pairing if asked.
+5. With USB MIDI: plug the USB cable; the app uses SysEx/CC over USB (no full state sync).
 
-### 2.3 Device Selection Screen
+### 2.4 Windows Bluetooth notes
 
-If the FLOW 8 is not detected, the app shows the Device Selection screen with an error message.
+On Windows, Bluetooth goes through an elevated helper and **DirectHCI**. While a BLE session is active, this PC’s Bluetooth radio is temporarily taken over (WinUSB). Prefer a **wired keyboard and mouse**. Other Bluetooth devices (headphones, trackers, etc.) may disconnect until the session ends.
+
+* First use may install a one-time signing certificate used by DirectHCI’s prepare step (libwdi).
+* If Bluetooth stays stuck after a crash, open **DirectHCI Control Panel** (Start Menu) or run recovery as Administrator — see the FAQ below and DirectHCI’s recovery docs.
+* Prefer **USB MIDI** whenever you need the normal Windows Bluetooth stack undisturbed.
+
+### 2.5 Device Selection Screen
+
+If USB MIDI is selected and the FLOW 8 is not detected, the app shows the Device Selection screen with an error message.
 
 | Action | Description |
 |--------|-------------|
@@ -295,21 +321,42 @@ Once Bluetooth is connected, the app can:
 
 > **Important:** The FLOW 8 only supports **one Bluetooth connection at a time**. Disconnect the official Behringer app before connecting with this application.
 
-### 10.3 Auto-Sync
+### 10.3 Windows (DirectHCI)
+
+macOS and Linux use the normal system Bluetooth stack. **Windows** uses DirectHCI via `flow8-ble-helper.exe` (elevated):
+
+1. UI launches the helper (UAC prompt).
+2. Helper prepares the Bluetooth controller if needed, then scans for FLOW LE.
+3. Session uses passive GATT listen (the mixer has no CCCD); handshake and mixer state follow.
+4. On disconnect/cancel, DirectHCI restores the Windows Bluetooth driver when cleanup succeeds.
+
+Hardware support follows DirectHCI (Intel AX201 is the best-documented adapter; others vary).
+
+### 10.4 Auto-Sync
 
 When BLE is connected and a sync interval is configured (Settings → Sync Interval), the app periodically requests the mixer's state and updates the UI to stay in sync.
 
-### 10.4 Manual Sync
+### 10.5 Manual Sync
 
 Click the **Sync** button in the navigation bar to request an immediate state update from the mixer.
+
+### 10.6 USB MIDI fallback
+
+USB MIDI remains a first-class path: full parameter **send** over CC/SysEx without Bluetooth. Use it when you want to avoid the Windows radio takeover, when DirectHCI is unavailable, or when you only need to drive the mixer without reading state/snapshot names.
 
 ***
 
 ## 11. FAQ — Troubleshooting
 
-**Q: Snapshot names don't appear on Windows — all slots look the same.**
+**Q: Windows asks for Administrator when I connect Bluetooth.**
 
-A: This is a known Windows limitation. The BLE subscribe required to fetch snapshot names fails on some Windows systems with the error `"The attribute cannot be written."`. Snapshots themselves work fine — you can still load them by slot number. Only the names are unavailable. There is no workaround at this time; this appears to be a platform-level BLE issue.
+A: Expected. The BLE helper must run elevated so DirectHCI can prepare/acquire the radio. Decline the prompt if you prefer **Use USB MIDI instead**.
+
+***
+
+**Q: During Bluetooth on Windows my mouse/headphones stop working.**
+
+A: DirectHCI temporarily takes over the PC Bluetooth radio. Use wired input devices for that session. Disconnect BLE in the app (or exit) to restore the normal Windows driver. If it does not come back, open **DirectHCI Control Panel** → recovery, or run `directhci.exe` recovery as Administrator (see DirectHCI docs under Program Files\DirectHCI).
 
 ***
 
@@ -319,9 +366,11 @@ A: The FLOW 8 only allows **one Bluetooth connection at a time**. The most commo
 
 If the official app is not running and BLE still won't connect, try:
 
-1. Disconnect and reconnect the FLOW 8 USB cable.
+1. Hold **PAIR APP** on the mixer so it advertises.
 2. Power-cycle the FLOW 8 (turn off, wait 5 seconds, turn on).
-3. Restart your computer — some Bluetooth adapters require a fresh OS-level reset to release stale connections.
+3. On Windows: confirm DirectHCI service is installed (bundled with the app installer), approve UAC, and check DirectHCI Control Panel status.
+4. Restart your computer — some Bluetooth adapters need a fresh OS-level reset.
+5. Fall back to **USB MIDI** if you only need control without sync.
 
 ***
 

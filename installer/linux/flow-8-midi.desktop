@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=FLOW 8 MIDI Controller
+Comment=Unofficial desktop controller for the Behringer FLOW 8 mixer
+Exec=flow-8-midi
+Icon=flow-8-midi
+Terminal=false
+Categories=AudioVideo;Audio;
+StartupNotify=true
+Keywords=MIDI;mixer;Behringer;FLOW8;Bluetooth;

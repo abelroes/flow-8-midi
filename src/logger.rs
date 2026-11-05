@@ -124,7 +124,10 @@ pub fn log(message: &str) {
 
 pub fn export_log() -> String {
     let mut output = String::new();
-    output.push_str(&format!("--- Debug Report ---\n{}\n\n", system_diagnostics()));
+    output.push_str(&format!(
+        "--- Debug Report ---\n{}\n\n",
+        system_diagnostics()
+    ));
 
     if let Some(buffer) = LOG_BUFFER.get() {
         if let Ok(buf) = buffer.lock() {
@@ -141,7 +144,15 @@ pub fn export_log() -> String {
 pub fn get_recent_entries(count: usize) -> Vec<LogEntry> {
     if let Some(buffer) = LOG_BUFFER.get() {
         if let Ok(buf) = buffer.lock() {
-            return buf.iter().rev().take(count).cloned().collect::<Vec<_>>().into_iter().rev().collect();
+            return buf
+                .iter()
+                .rev()
+                .take(count)
+                .cloned()
+                .collect::<Vec<_>>()
+                .into_iter()
+                .rev()
+                .collect();
         }
     }
     vec![]

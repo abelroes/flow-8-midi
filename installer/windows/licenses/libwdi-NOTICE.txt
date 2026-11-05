@@ -1,0 +1,4 @@
+libwdi is used by the bundled DirectHCI runtime for one-time WinUSB package signing.
+Upstream: https://github.com/pbatard/libwdi
+License: LGPL-3.0 (with linking exception as published by the libwdi project).
+The libwdi.dll binary ships beside directhcid.exe; see DirectHCI documentation for the pinned build.

@@ -1,5 +1,5 @@
-use crate::service::midi::{send_cc, send_note_on, send_program_change};
 use crate::model::message::InterfaceMessage;
+use crate::service::midi::{send_cc, send_note_on, send_program_change};
 use midir::MidiOutputConnection;
 
 /// Maps InterfaceMessage events to MIDI commands.
@@ -31,14 +31,25 @@ pub fn match_midi_command(
         | InterfaceMessage::Tick
         | InterfaceMessage::BleConnect
         | InterfaceMessage::BleRequestDump
-        | InterfaceMessage::SyncIntervalChanged(_) => {}
+        | InterfaceMessage::SyncIntervalChanged(_)
+        | InterfaceMessage::CloseToTrayChanged(_)
+        | InterfaceMessage::SelectBus(_)
+        | InterfaceMessage::SelectSetupTab(_)
+        | InterfaceMessage::SelectChannel(_)
+        | InterfaceMessage::SelectFxSlot(_)
+        | InterfaceMessage::EditChannel(_)
+        | InterfaceMessage::EditBus(_)
+        | InterfaceMessage::ToggleAppPref(_)
+        | InterfaceMessage::ToggleRouting(_)
+        | InterfaceMessage::ToggleSnapshotScope(_)
+        | InterfaceMessage::DismissFirmwareNotice
+        | InterfaceMessage::ConnectBle
+        | InterfaceMessage::ConnectUsb
+        | InterfaceMessage::CancelConnection
+        | InterfaceMessage::BleSubscription(_) => {}
 
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
+        #[cfg(debug_assertions)]
         InterfaceMessage::CopyHexDump => {}
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
-        InterfaceMessage::CalibrateStart => {}
-        #[cfg(any(debug_assertions, feature = "dev-tools"))]
-        InterfaceMessage::DigestRun => {}
 
         // --- Input Channels (MIDI Ch = channel_id) ---
         InterfaceMessage::Mute(ch, value) => send_cc(conn, ch, 5, if !value { 127 } else { 0 }),

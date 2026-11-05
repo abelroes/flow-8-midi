@@ -1,0 +1,18 @@
+FLOW 8 MIDI Controller — third-party notices (Windows installer)
+
+This installer bundles:
+
+1) FLOW 8 MIDI Controller
+   License: GNU GPL v3 — see licenses\FLOW8-MIDI-GPL-3.0.txt
+
+2) DirectHCI runtime (directhcid, directhci, Control Panel, directhci-ble)
+   License: GNU GPL-3.0-only — see licenses\DirectHCI-GPL-3.0.txt
+   Upstream: https://github.com/NanamiKite/DirectHCI
+
+3) libwdi (libwdi.dll)
+   Used by DirectHCI for one-time WinUSB INF/catalog signing during
+   "Prepare Controller". License: LGPL-3.0 as published by the libwdi project.
+   See licenses\libwdi-NOTICE.txt and https://github.com/pbatard/libwdi
+
+By installing, you accept the GPL terms for FLOW 8 MIDI and DirectHCI, and
+acknowledge the LGPL obligations for libwdi.

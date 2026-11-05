@@ -275,9 +275,11 @@ The `22` and `08` bytes within the pattern are MSB bytes with specific bits set 
 
 ## 3. BLE (Bluetooth Low Energy) — Proprietary Protocol
 
+> **Canonical wire map (APK static):** [docs/rea/ble-wire-map.md](./rea/ble-wire-map.md) — framing, field types, uf8 scales, all CommandTypes, MixerState `0x38`. Machine catalog: [docs/rea/data/xairbt_cmd_catalog.json](./rea/data/xairbt_cmd_catalog.json). HCI below: auth key + session timing; packing prefer the static map.
+
 ### 3.1 BLE Connection Details
 
-Discovered via HCI snoop log capture on Android (Xiaomi 14 Ultra → FLOW 8).
+Discovered via HCI snoop log capture on Android (Xiaomi 14 Ultra → FLOW 8); UUIDs confirmed in official APK `.so`.
 
 | Property | Value |
 |---|---|
@@ -311,17 +313,17 @@ Step 12: Phone → FLOW 8:  [0x21] Context/subscribe command
 Step 13: FLOW 8 → Phone:  [0x22] State stream begins (~300ms interval)
 ```
 
-**CRITICAL DISCOVERY: Authentication key is STATIC and REPLAYABLE.**
+**Authentication (corrected via APK/`.so` static analysis — see [docs/rea/ble-wire-map.md](./rea/ble-wire-map.md) §5.7.1):**
 
-The 0x39 auth packet is **identical** across all observed sessions (3+ connections, including reconnects and device reboots):
+`0x39` carries a **16-byte client ID** generated/persisted by the official app (`loadOrGenerateClientId`), not a universal Behringer secret. Same app install ⇒ same packet across reconnects (matches HCI “static” observation). Flow: device `0x35` → phone `0x39` (client ID) → device `0x36` ack → phone auto `0x37`.
+
+Captured example (one client ID + framing/checksum):
 
 ```
 3901fd062b0639f17fe7b7278b8f355a495c2a
 ```
 
-This is NOT a challenge-response — it is a **fixed key** that the phone sends to the mixer. The mixer simply verifies it and acks. This means we can hardcode this key in our desktop BLE implementation.
-
-The auth is **one-way**: the phone authenticates TO the mixer, not the other way around. The 0x36 ack (`360137`) is also always identical.
+Desktop hardcodes this captured client ID. The APK always replies with its persisted client ID and does not read `pairing_any`; accept/reject of a foreign ID is device-side (see `docs/rea/ble-wire-map.md` §5.7.2).
 
 ### 3.3 Packet Format — Checksum Discovery
 
@@ -460,101 +462,60 @@ type ver  param len
 | Param | Len | Data | Meaning |
 |-------|-----|------|---------|
 | 0x05 | 0x0d (13) | `"Abel's Flow 8"` | Device name |
-| 0x80 | 0x30 (48) | 12 × 4-byte groups | Channel/EQ config per channel |
-| 0xb0 | 0x01 (1) | `00` | Unknown boolean/flag |
+| 0x80 | 0x30 (48) | 12 × 4-byte groups | ChannelStates: per slot `{flags L/R, preset i16le, type}` — full layout in `docs/rea/ble-wire-map.md` §5.4.2 |
+| 0xb0 | 0x01 (1) | `00` | Client linked with mixer (bool) |
 
-##### Type 0x22 — State Stream / Metering (20 bytes, every ~300ms)
+##### Type 0x22 — MeterUpdate
 
-The primary continuous notification. **Contains real-time metering data ONLY — fader positions are NOT in this stream.**
+Continuous metering only (not fader positions). Wire: 15× uf8 scale 3 + `gr_values` u16be; index→L/R map in `docs/rea/ble-wire-map.md` §5.5. Early HCI sketch (length varies with MTU/chunking):
 
 ```
-22 01 M1 00 M2 M3 M4 M5 M6 M7 00 00 MB MB BF BF BF 00 00 [chk]
-^^^^ ^^^^ ^^ ^^ ^^^^^ ^^^^^^^^^ ^^^^^ ^^^^^ ^^^^^^^^^ ^^^^^
-type ver  |  0  channel metering  0     bus   constant   0
-          |                              meter
-          main meter?
+22 01 <15× uf8_s3> <gr u16be> [chk]
 ```
 
-**Confirmed behavior (controlled test with 200+ packets):**
-
-| Bytes | Behavior | Confirmed Role |
-|-------|----------|---------------|
-| \[2] | Fluctuates 0x34–0x83 | **Metering** — signal level |
-| \[3] | Always 0x00 | Unused/zero |
-| \[4–5] | Fluctuates 0x00–0x01 | **Metering** — low-level channels |
-| \[6–9] | Fluctuates 0x01–0x06 | **Metering** — active channel signals |
-| \[10–11] | Always 0x00 | Unused/zero |
-| \[12–13] | Fluctuates 0x34–0x70, **always paired** | **Metering** — bus output level (L/R or Main) |
-| \[14–16] | **Always `bf bf bf`** (191) | **Constant** — NOT fader positions (unchanged after moving Main to 0) |
-| \[17–18] | Always 0x00 | Unused/zero |
-
-**Key finding**: Bytes \[14–16] remain `bf bf bf` even AFTER moving the Main fader to minimum (0x00) via a 0x06 command. This proves they are NOT bus fader positions. They may be a reference level, protocol constant, or metering scale factor.
-
-The 0x22 stream starts ONLY after the phone sends 0x21 context/subscribe commands. Without 0x21, the mixer does not begin streaming.
+HCI observation: levels move with signal; they do **not** track fader moves (`0x06`) — consistent with peak meters, not bus positions. Streaming starts only after the host sends `MeterRequest` (`0x21`).
 
 ***
 
 #### Commands: Phone → FLOW 8
 
-##### Type 0x06 — Parameter Change (6 bytes) — CONFIRMED
+##### Type 0x06 — Channel Master / Level (6 bytes) — CORRECTED (APK REA 2026-10)
 
-**The primary command for changing mixer parameters.** Discovered in controlled test (capture 4).
+> **Correction:** Earlier notes called byte 3 a “parameter ID” with `0x0f = Level`. The official app (`CommandTypeChannelMaster = 0x06`) shows type `0x06` is the **master/send level** command. Byte 3 is the **destination channel**; `0x0f` is `LRBusChannelId` (Main). Other parameters use **other packet types** (Mute `0x08`, Solo `0x01`, Pan `0x00`, Gain `0x02`, …). Full map: [ble-wire-map.md](./rea/ble-wire-map.md).
 
 ```
-06 01 CH PP VV [chk]
-^^^^ ^^^^ ^^ ^^ ^^
-type ver  ch prm val
+06 01 SRC DST VV [chk]
+^^^^ ^^ ^^^ ^^^ ^^
+type chks src dest uf8   (chunks=1)
 ```
 
 | Field | Size | Description |
 |-------|------|-------------|
-| CH | 1 byte | Channel number (1-based) |
-| PP | 1 byte | Parameter ID |
-| VV | 1 byte | Value (0x00 = min, 0xFF = max) |
+| SRC | 1 byte | Source channel (native ID, **0-based**: Ch1=`0x00`) |
+| DST | 1 byte | Destination bus (Main/LR=`0x0f`; Mon/FX for sends) |
+| VV | 1 byte | dB via **uf8 scale 3** (LUT −144…+10 dB), not linear CC |
 
-**Confirmed parameter: 0x0f = Level (Fader)**
+API: `sendChannelMasterControlCommand(srcCh, destCh, linearFloat)` → native linear→dB→uf8 scale 3.
 
-**Observed fader movements (capture 4):**
-
-*Channel 1 fader → maximum (t=499.83s):*
+**Observed HCI (reinterpreted with 0-based IDs):**
 
 ```
-06 01 01 0f c7 de   → value 0xc7 (199)
-06 01 01 0f d3 ea   → value 0xd3 (211)
-06 01 01 0f ec 03   → value 0xec (236)
-06 01 01 0f ff 16   → value 0xFF (255) = MAXIMUM
+06 01 01 0f c7 …   → src=InputChannel2, dest=LR, mid-high fader
+06 01 00 0f …      → src=InputChannel1 → Main (expected from app)
+06 01 06 0f 00 …   → src=BTUSB, dest=LR, minimum (LUT index 0)
 ```
 
-*Ch7/8 USB/BT fader → minimum (t=528.10s):*
+**Native = wire channel IDs:**
 
-```
-06 01 06 0f 4a 66   → value 0x4a (74)
-06 01 06 0f 2a 46   → value 0x2a (42)
-06 01 06 0f 00 1c   → value 0x00 (0) = MINIMUM
-06 01 06 0f 00 1c   → value 0x00 (repeated, confirming position)
-```
-
-**Channel addressing (confirmed):**
-
-| CH byte | Target | Confirmed? |
-|---------|--------|-----------|
-| 0x01 | Ch1 (XLR input 1) | YES — user moved Ch1 fader |
-| 0x02 | Ch2 (XLR input 2) | Inferred |
-| 0x03 | Ch3 (Combo input 3) | Inferred |
-| 0x04 | Ch4 (Combo input 4) | Inferred |
-| 0x05 | Ch5/6 (Stereo Line) | Inferred |
-| 0x06 | Ch7/8 (USB/BT input) | YES — user moved USB/BT fader |
-| 0x07? | Main Out? | NOT TESTED |
-| 0x08? | Mon1? | NOT TESTED |
-| 0x09? | Mon2? | NOT TESTED |
-
-**Notes**:
-
-* The FLOW 8 app shows 6 input channel strips (1, 2, 3, 4, 5/6, 7/8) plus a separate Main Out fader. BLE addresses 0x01–0x06 map to the 6 input strips. The Main Out, Mon1, and Mon2 bus fader addresses are not yet confirmed.
-* Ch7/8 (0x06) is a **configurable input**: in this test setup it was routed to USB/BT feedback, but in other mixer snapshots it can receive a different stereo input source. The BLE address refers to the channel strip, not the source.
+| ID | Target |
+|----|--------|
+| 0x00–0x05 | InputChannel1–6 |
+| 0x06 | InputChannelBTUSB |
+| 0x0a / 0x0b | AUX Mon1 / Mon2 |
+| 0x0c / 0x0d | FX1 / FX2 buses |
+| 0x0f | LR / Main |
 
 **Echo behavior**: Every 0x06 Write Request is echoed back by the mixer as a Notification with identical data (acknowledgment).
-
 ##### Type 0x39 — Authentication Key (19 bytes) — STATIC
 
 ```
@@ -778,9 +739,9 @@ PHASE 10 — MIDI Dump (t=620.19s)
 
 ### Parameter Control
 
-* \[x] **Type 0x06 = parameter change command**: `06 01 CH PARAM VALUE CHK`
-* \[x] Parameter 0x0f = Level/Fader, values 0x00 (min) to 0xFF (max)
-* \[x] Channel 0x01 = Ch1, Channel 0x06 = Ch7/8 USB/BT input (confirmed by user)
+* \[x] **Type 0x06 = Channel Master / Level**: `06 01 SRC DST VALUE CHK` (DST `0x0f` = Main/LR; not a generic PARAM id)
+* \[x] Other params use distinct types (Mute `0x08`, Solo `0x01`, Pan `0x00`, …) — FLOW+Mix 1.12 native catalog
+* \[x] HCI strip bytes `0x01`/`0x06` observed for Ch1/USB-BT; native InputChannel ids are 0-based (`0x00`–`0x06`)
 * \[x] Type 0x26 = parameter QUERY (not change); response via Type 0x25
 * \[x] Param 0x05 = device name, Param 0x80 = channel config, Param 0xb0 = flag
 
@@ -821,17 +782,24 @@ PHASE 10 — MIDI Dump (t=620.19s)
 * \[x] ~~Map remaining SysEx dump byte offsets~~: All known parameters parsed (Level, Gain, Pan, EQ, Comp, LowCut, Sends, Mute, Solo, Phantom, Bus EQ, Limiter, FX Preset/Params, Channel Names)
 * \[x] ~~Implement BLE connection from desktop~~: via `btleplug` crate — auth, dump trigger, snapshot names all working
 
+### Resolved (APK REA — FLOW+Mix 1.12)
+
+* \[x] ~~Map Main/Mon/FX BLE addresses~~: Native IDs — LR=`0x0f`, AUX=`0x0a`/`0x0b`, FX=`0x0c`/`0x0d`, inputs `0x00`–`0x06` (see Type 0x06 section)
+* \[x] ~~Map parameter IDs inside Type 0x06~~: **Model corrected** — `0x06` is Master only; Mute/Solo/Pan/Gain/… are separate types (see [docs/rea/ble-wire-map.md](./rea/ble-wire-map.md))
+* \[x] ~~EQ/FX/Send via BLE~~: Separate command types (`0x09` PEQ, `0x03` GEQ, `0x06` master-to-dest for sends, `0x11` FX setup, …)
+* \[x] ~~0x37 / 0x38 roles~~: GetMixerState request=`0x37`, MixerState dump=`0x38`; MidiDump=`0x4b`
+* \[x] ~~Channel name write~~: type `0x05` (`CommandTypeChannelLabel`)
+
 ### Open
 
 #### BLE Protocol
 
-* \[ ] **Map Main Out / Mon1 / Mon2 BLE addresses**: CH=0x06 confirmed as Ch7/8 (USB/BT). Need to test Main Out, Mon1, Mon2 faders to find their CH values (likely 0x07, 0x08, 0x09).
-* \[ ] **Map all parameter IDs for Type 0x06**: We know 0x0f = Level. What are EQ, Pan, Gain, Sends, Mute, Solo, Compressor, etc.?
-* \[ ] **Decode 0x38 BLE state dump structure**: Full byte mapping of the 4-chunk dump to individual mixer parameters
-* \[ ] **Decode 0x21 variable bytes**: What do the variable bytes represent? Viewport? Subscription filter?
-* \[ ] **Map 0x22 metering bytes to specific channels**: Which bytes correspond to which channels?
-* \[ ] **Test EQ/FX/Send changes via BLE**: Do they use 0x06 with different parameter IDs, or different packet types?
-* \[ ] **Investigate Windows BLE subscribe failure**: HRESULT 0x80650003 prevents reading snapshot names on some Windows systems. May be a btleplug or OS-level issue.
+* \[ ] **Correlate HCI strip bytes with native 0-based input IDs** (possible off-by-one)
+* \[ ] **Decode 0x38 BLE state dump structure**: Full byte mapping (parser is in native `.so`; Ghidra 12.1 not available in this environment)
+* \[ ] **Decode 0x21 payload fields** beyond “starts metering stream”
+* \[ ] **Map 0x22 metering bytes to specific channels**
+* \[ ] **Wire layout for each non-Master command type** (bool/float packing)
+* \[ ] **Investigate Windows BLE subscribe failure**: HRESULT 0x80650003 — APK uses standard Android CCCD; likely `btleplug`/OS, not a distinct protocol
 
 #### SysEx
 

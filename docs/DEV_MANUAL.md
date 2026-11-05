@@ -17,6 +17,7 @@ For general usage, see the **[User Manual](./MANUAL.md)**. For protocol details,
     - [2.3 Debug Build (Cross-compilation for Windows)](#23-debug-build-cross-compilation-for-windows)
     - [2.4 Simulating Small Screens](#24-simulating-small-screens)
     - [2.5 Release Build with Dev-Tools](#25-release-build-with-dev-tools)
+    - [2.6 Windows BLE build (GitHub Actions pattern)](#26-windows-ble-build-github-actions-pattern)
   - [3. Dev Tools in the UI](#3-dev-tools-in-the-ui)
     - [3.1 Hex Viewer](#31-hex-viewer)
     - [3.2 Copy Hex Dump](#32-copy-hex-dump)
@@ -72,19 +73,26 @@ Enables dev-tools in a release-like build. Also required for the CLI binaries (`
 
 ### 2.3 Debug Build (Cross-compilation for Windows)
 
-When developing on WSL/Linux and testing on Windows, use a debug build to keep console output visible (release builds suppress it via `windows_subsystem = "windows"`):
+Build **Flow 8 + sibling DirectHCI** into one output folder (see §2.6). From WSL:
 
 ```bash
-cargo build --target x86_64-pc-windows-gnu
+scripts/windows/build-dev-wsl.sh debug
 ```
 
-Then, from PowerShell on the Windows host:
+**End-user install on Windows** = GUI Setup only (`FLOW8-MIDI-Setup-*.exe`).
+Same command locally and in GitHub Actions:
 
 ```powershell
-\\wsl.localhost\<distro>\home\<user>\projects\flow-8-midi\target\x86_64-pc-windows-gnu\debug\flow-8-midi.exe
+# Full build + Setup (Inno Setup 6 + libwdi.dll on the build PC)
+.\scripts\windows\build-installer.ps1 -OpenOutput
+
+# After WSL stage only:
+.\scripts\windows\build-installer.ps1 -Profile debug -Target x86_64-pc-windows-gnu -SkipBuild -OpenOutput
 ```
 
-> **Note:** The `gnu` target may require MinGW runtime DLLs. For production Windows binaries, use the `msvc` target compiled natively on Windows or via CI.
+Then run the generated Setup (wizard, component selection, Start Menu).
+
+> **Note:** WSL cross-builds use `x86_64-pc-windows-gnu` (may need MinGW DLLs). Production/CI uses `x86_64-pc-windows-msvc`.
 
 ### 2.4 Simulating Small Screens
 
@@ -112,6 +120,56 @@ cargo build --release --features dev-tools
 ```
 
 The binary is output to `target/release/flow-8-midi` (or `.exe` on Windows).
+
+### 2.6 Windows BLE build (GitHub Actions pattern)
+
+Source of truth: `.github/workflows/ci.yml` and `release.yml`.
+
+**Layout:**
+
+```
+parent/
+  flow-8-midi/     ← this repo
+  DirectHCI/       ← sibling (Actions: path flow-8-midi + path DirectHCI)
+```
+
+**Trick that removes manual EXE copies:** set one shared target directory so every crate writes into the same folder:
+
+```bash
+export CARGO_TARGET_DIR="$PWD/target"
+T=x86_64-pc-windows-msvc   # or x86_64-pc-windows-gnu from WSL
+
+cargo build --release --target "$T" --bin flow-8-midi
+(cd helper/flow8-ble-helper && cargo build --release --target "$T")
+(cd ../DirectHCI && cargo build --release --target "$T" \
+  -p directhci -p directhcid -p directhci-control-panel -p directhci-ble-cli)
+# → target/$T/release/{flow-8-midi,flow8-ble-helper,directhci,directhcid,...}.exe
+```
+
+Wrappers:
+
+```powershell
+.\scripts\windows\build-windows.ps1      # stage only (no Setup)
+.\scripts\windows\build-installer.ps1    # build + FLOW8-MIDI-Setup-*.exe (canonical)
+```
+
+```bash
+scripts/windows/build-dev-wsl.sh debug   # WSL stage of the same stack
+```
+
+`libwdi.dll` is the only non-Cargo piece on the **build** machine (DirectHCI
+`build-libwdi.ps1`, `Program Files\DirectHCI`, or secret `LIBWDI_DLL_URL` in Actions).
+
+### 2.7 End-user packaging (one package each)
+
+End users get **exactly one** installable per OS — never a separate DirectHCI installer:
+
+| OS | Command | Package |
+|----|---------|---------|
+| **Windows** | `.\scripts\windows\build-installer.ps1` | `FLOW8-MIDI-Setup-*.exe` (wizard; FLOW 8 required, DirectHCI optional) |
+| **Linux** | `scripts/linux/build-appimage.sh` | `FLOW8-MIDI-*-x86_64.AppImage` |
+
+Tag releases call the same `build-installer.ps1` (needs secret `LIBWDI_DLL_URL`). See [MANUAL §2.1](./MANUAL.md#21-install).
 
 ***
 
